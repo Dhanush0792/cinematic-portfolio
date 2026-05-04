@@ -31,3 +31,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# personal files
+dhanush_image.jpeg
+DHANUSH_SIDDILINGAM_FULLSTACK_BACKEND_RESUME.pdf
