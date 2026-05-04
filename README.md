@@ -1,39 +1,47 @@
-# Cinematic Particle Portfolio
+# Dhanush Siddilingam | Cinematic Particle Universe Portfolio
 
-An immersive, scroll-based portfolio experience built with Next.js, Three.js, and Framer Motion.
+Welcome to the source code for my interactive, WebGL-driven portfolio. This project moves away from the traditional static webpage, presenting my work, skills, and background as an immersive, spatial system built with **React Three Fiber** and **Framer Motion**.
 
-## Features
+---
 
-- **Cinematic Narrative**: A scroll-driven sequence starting from darkness into a breathing particle sphere, expanding into a starry sky.
-- **Interactive Stars**: Focus on specific glowing particles to reveal section details (About, Education, Skills, Projects, Contact).
-- **High Performance**: Built with React Three Fiber and custom GLSL shaders for smooth 60fps animations.
-- **Modern Tech Stack**: Next.js 14, TypeScript, Tailwind CSS, and Framer Motion.
+## 👨‍💻 About Me
 
-## Tech Stack
+I am a **Full Stack Developer** and **AI Engineer** specializing in production-grade backend systems, REST API architecture, and intelligent application development. 
 
-- **Framework**: [Next.js](https://nextjs.org/)
-- **3D Engine**: [React Three Fiber](https://docs.pmnd.rs/react-three-fiber) / [Three.js](https://threejs.org/)
-- **Animations**: [Framer Motion](https://www.framer.com/motion/)
-- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+I recently graduated with a B.Tech in Electronics and Communication Engineering (ECE) from **Sri Venkateswara College of Engineering, Tirupati** (CGPA: 8.83). Throughout my academic and professional journey—including an internship at **Microsoft Azure** where I validated AI workflows and API pipelines—I have focused on bridging the gap between core engineering fundamentals and modern software systems.
 
-## Getting Started
+Whether I am designing a Java Spring database context or engineering a LangChain agent loop, I build software that is robust, scalable, and intelligent.
 
-First, install the dependencies:
+---
 
-```bash
-npm install
-```
+## 🛠️ Capabilities & Tech Stack
 
-Then, run the development server:
+* **Backend & Systems:** Java, Python, SQL, REST API Architecture, Relational Database Design
+* **Frontend Development:** React, Next.js, TypeScript, Three.js, Framer Motion, HTML/CSS
+* **AI & Machine Learning:** LLM Integration, LangChain, Data Processing pipelines
+* **Cloud & Tools:** Microsoft Azure, Oracle Cloud Infrastructure (OCI), Git, Postman
 
-```bash
-npm run dev
-```
+---
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🌌 About This Repository (The Engine)
 
-## Deployment
+This portfolio is built as a state-driven cinematic experience. Instead of scrolling down a page, the user scrolls *through* space.
 
-The easiest way to deploy this project is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme).
+### Core Architecture
+* **Framework:** Next.js (App Router)
+* **3D Engine:** Three.js via React Three Fiber (@react-three/fiber)
+* **Animation & UI:** Framer Motion (Glassmorphism panels, strict entry/exit easing)
+* **Post-Processing:** `@react-three/postprocessing` (Threshold Bloom, Depth Fade, Color Grading)
 
-Check out the [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+### The Physics System
+The particle engine relies on a heavily optimized, custom `InstancedMesh`-style buffer using raw `Float32Arrays`. Interactions are strictly driven by a dynamic **mass-spring-damper** physics loop:
+1. **Damped Motion:** When activated, particles snap out using high tension and settle slowly using heavy mathematical friction.
+2. **Glass Blur Handoff:** Custom fragment shaders transition the sharp WebGL point sprites into diffuse, soft-edged transmission hazes the exact millisecond the Framer Motion UI layers mount.
+3. **Interactive Nodes:** The "Projects" system utilizes R3F raycasting to create a distinct orbital interaction system rather than a passive scroll-trigger.
+
+---
+
+## 📬 Contact
+Feel free to reach out to discuss systems architecture, AI development, or full-stack engineering opportunities.
+
+* **GitHub:** [@Dhanush0792](https://github.com/Dhanush0792)
