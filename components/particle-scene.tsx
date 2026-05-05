@@ -186,31 +186,52 @@ function ParticleController({ progress, scrollState, activePanel, setActivePanel
     geo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
     geo.setAttribute("size", new THREE.BufferAttribute(sizes, 1));
     geo.setAttribute("alpha", new THREE.BufferAttribute(alphas, 1));
+    
+    const seeds = new Float32Array(COUNT);
+    for(let i=0; i<COUNT; i++) seeds[i] = particles[i]?.seed || Math.random() * Math.PI * 2;
+    geo.setAttribute("seed", new THREE.BufferAttribute(seeds, 1));
+    
     return geo;
-  }, [alphas, colors, positions, sizes]);
+  }, [alphas, colors, positions, sizes, particles]);
 
   const material = useMemo(
     () =>
       new THREE.ShaderMaterial({
         uniforms: {
-          uPixelRatio: { value: typeof window === "undefined" ? 1 : Math.min(window.devicePixelRatio, 2) }
+          uPixelRatio: { value: typeof window === "undefined" ? 1 : Math.min(window.devicePixelRatio, 1.5) },
+          uTime: { value: 0 },
+          uSphereToField: { value: 0 },
+          uBreathing: { value: 1 }
         },
         vertexShader: `
           attribute float size;
           attribute float alpha;
+          attribute float seed;
           varying vec3 vColor;
           varying float vAlpha;
           varying float vSize;
           uniform float uPixelRatio;
+          uniform float uTime;
+          uniform float uSphereToField;
+          uniform float uBreathing;
 
           void main() {
             vColor = color;
             vSize = size;
-            vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+            
+            vec3 pos = position;
+            
+            // GPU-Accelerated Organic Drift (only when field is expanded)
+            if (uSphereToField > 0.01) {
+              pos.x += sin(uTime * 0.12 + seed) * 0.4 * uSphereToField;
+              pos.y += cos(uTime * 0.08 + seed) * 0.4 * uSphereToField;
+              pos.z += sin(uTime * 0.1 + seed * 2.0) * 0.2 * uSphereToField;
+            }
+            
+            vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
             gl_Position = projectionMatrix * mvPosition;
             gl_PointSize = size * uPixelRatio * (300.0 / -mvPosition.z);
             
-            // Depth-based alpha: particles fade out as they get further from the camera
             float depth = clamp(1.0 - (-mvPosition.z / 35.0), 0.0, 1.0);
             vAlpha = alpha * pow(depth, 1.5);
           }
@@ -246,22 +267,19 @@ function ParticleController({ progress, scrollState, activePanel, setActivePanel
     const darkness = mapRange(progress, 0, 0.05);
     const sphereToField = easeOutQuart(mapRange(progress, 0.2, 0.4));
     const breathing = 1 + Math.sin(time * 0.6) * 0.02;
-    const fieldExpansion = THREE.MathUtils.lerp(1, 6/2.5, sphereToField);
+    const fieldExpansion = THREE.MathUtils.lerp(1, 12/3.5, sphereToField);
+
+    // Update GPU uniforms
+    material.uniforms.uTime.value = time;
+    material.uniforms.uSphereToField.value = sphereToField;
+    material.uniforms.uBreathing.value = breathing;
 
     if (!particles || particles.length === 0 || !geometry.attributes.position) return;
     
     for (let index = 0; index < particles.length; index += 1) {
       const particle = particles[index];
       
-      // Calculate target position using pre-allocated vector to save memory
       let target = tempVec.copy(particle.sphere).multiplyScalar(breathing * fieldExpansion);
-
-      // Add slight drift to field particles (Twinkle/Organic Drift)
-      if (sphereToField > 0.05) {
-        target.x += Math.sin(time * 0.12 + particle.seed) * 0.4 * sphereToField;
-        target.y += Math.cos(time * 0.08 + particle.seed) * 0.4 * sphereToField;
-        target.z += Math.sin(time * 0.1 + particle.seed * 2.0) * 0.2 * sphereToField;
-      }
       
       // Determine active states
       let isActive = !!activePanel && particle.role === activePanel;
@@ -431,9 +449,9 @@ export function ParticleScene(props: ParticleSceneProps) {
   return (
     <div className="absolute inset-0">
       <Canvas
-        dpr={[1, 2]}
+        dpr={[1, 1.5]}
         camera={{ position: [0, 0, 12], fov: 45, near: 0.1, far: 100 }}
-        gl={{ antialias: true, alpha: false, powerPreference: "high-performance" }}
+        gl={{ antialias: false, alpha: false, powerPreference: "high-performance" }}
       >
         <color attach="background" args={["#050507"]} />
         <CameraRig progress={props.progress} />
