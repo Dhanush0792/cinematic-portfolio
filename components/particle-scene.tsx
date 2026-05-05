@@ -260,7 +260,7 @@ function ParticleController({ progress, scrollState, activePanel, setActivePanel
       }
       
       // Determine active states
-      let isActive = particle.role === activePanel;
+      let isActive = !!activePanel && particle.role === activePanel;
       if (activePanel === "projects") {
         isActive = (index === selectedIndex);
       }
@@ -434,6 +434,11 @@ export function ParticleScene(props: ParticleSceneProps) {
         <color attach="background" args={["#050507"]} />
         <CameraRig progress={props.progress} />
         <ParticleController {...props} />
+        <EffectComposer disableNormalPass>
+          <Bloom luminanceThreshold={0.85} luminanceSmoothing={0.9} intensity={0.25} radius={0.8} />
+          <HueSaturation saturation={-0.15} />
+          <BrightnessContrast brightness={-0.02} contrast={0.1} />
+        </EffectComposer>
       </Canvas>
     </div>
   );
