@@ -2,7 +2,7 @@
 "use client";
 
 import { Canvas, ThreeEvent, useFrame, useThree } from "@react-three/fiber";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { EffectComposer, Bloom, HueSaturation, BrightnessContrast } from "@react-three/postprocessing";
 import * as THREE from "three";
 
