@@ -163,11 +163,7 @@ function ParticleController({ progress, scrollState, activePanel, setActivePanel
   const tempVec = useMemo(() => new THREE.Vector3(), []);
   const tempCenter = useMemo(() => new THREE.Vector3(), []);
 
-  // Initialize particles strictly on the client
-  const [particles, setParticles] = useState<ParticleData[]>([]);
-  useEffect(() => {
-    setParticles(makeParticles());
-  }, []);
+  const particles = useMemo(() => makeParticles(), []);
 
   // Reset selection when we leave the projects panel
   useEffect(() => {
@@ -182,13 +178,15 @@ function ParticleController({ progress, scrollState, activePanel, setActivePanel
 
   const geometry = useMemo(() => {
     const geo = new THREE.BufferGeometry();
+    if (!positions || !colors || !sizes || !alphas) return geo;
+    
     geo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
     geo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
     geo.setAttribute("size", new THREE.BufferAttribute(sizes, 1));
     geo.setAttribute("alpha", new THREE.BufferAttribute(alphas, 1));
     
     const seeds = new Float32Array(COUNT);
-    for(let i=0; i<COUNT; i++) seeds[i] = particles[i]?.seed || Math.random() * Math.PI * 2;
+    for(let i=0; i<COUNT; i++) seeds[i] = particles[i]?.seed || 0;
     geo.setAttribute("seed", new THREE.BufferAttribute(seeds, 1));
     
     return geo;
@@ -274,10 +272,12 @@ function ParticleController({ progress, scrollState, activePanel, setActivePanel
     material.uniforms.uSphereToField.value = sphereToField;
     material.uniforms.uBreathing.value = breathing;
 
-    if (!particles || particles.length === 0 || !geometry.attributes.position) return;
+    if (!particles || !particles.length || !geometry?.attributes?.position) return;
     
-    for (let index = 0; index < particles.length; index += 1) {
+    const len = particles.length;
+    for (let index = 0; index < len; index += 1) {
       const particle = particles[index];
+      if (!particle) continue;
       
       let target = tempVec.copy(particle.sphere).multiplyScalar(breathing * fieldExpansion);
       
@@ -449,18 +449,13 @@ export function ParticleScene(props: ParticleSceneProps) {
   return (
     <div className="absolute inset-0">
       <Canvas
-        dpr={[1, 1.5]}
+        dpr={1}
         camera={{ position: [0, 0, 12], fov: 45, near: 0.1, far: 100 }}
         gl={{ antialias: false, alpha: false, powerPreference: "high-performance" }}
       >
-        <color attach="background" args={["#050507"]} />
+        <color attach="background" args={["#030305"]} />
         <CameraRig progress={props.progress} />
         <ParticleController {...props} />
-        <EffectComposer disableNormalPass>
-          <Bloom luminanceThreshold={0.85} luminanceSmoothing={0.9} intensity={0.25} radius={0.8} />
-          <HueSaturation saturation={-0.15} />
-          <BrightnessContrast brightness={-0.02} contrast={0.1} />
-        </EffectComposer>
       </Canvas>
     </div>
   );
