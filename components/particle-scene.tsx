@@ -32,10 +32,10 @@ type ParticleData = {
   clusterOffset: THREE.Vector3 | null;
 };
 
-const COUNT = 1200;
-const SPHERE_RADIUS = 3;
-const FIELD_RADIUS = 10;
-const CENTER = new THREE.Vector3(0, 0, 4);
+const COUNT = 2400;
+const SPHERE_RADIUS = 3.5;
+const FIELD_RADIUS = 12;
+const CENTER = new THREE.Vector3(0, 0, 8.5);
 
 const SECTION_COLORS: Record<string, string> = {
   about: "#7B61FF",
@@ -119,8 +119,8 @@ function makeParticles() {
 
     const color = role ? new THREE.Color(SECTION_COLORS[role]) : new THREE.Color("#6B6B7A");
 
-    const size = role ? 2.5 : 0.8 + Math.random() * 1.0;
-    const opacity = role ? 1 : 0.18 + Math.random() * 0.07;
+    const size = role ? 2.8 : 0.6 + Math.random() * 0.9;
+    const opacity = role ? 1 : 0.12 + Math.random() * 0.12;
 
     return {
       sphere,
@@ -205,11 +205,14 @@ function ParticleController({ progress, scrollState, activePanel, setActivePanel
 
           void main() {
             vColor = color;
-            vAlpha = alpha;
             vSize = size;
             vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
             gl_Position = projectionMatrix * mvPosition;
             gl_PointSize = size * uPixelRatio * (300.0 / -mvPosition.z);
+            
+            // Depth-based alpha: particles fade out as they get further from the camera
+            float depth = clamp(1.0 - (-mvPosition.z / 35.0), 0.0, 1.0);
+            vAlpha = alpha * pow(depth, 1.5);
           }
         `,
         fragmentShader: `
@@ -253,10 +256,11 @@ function ParticleController({ progress, scrollState, activePanel, setActivePanel
       // Calculate target position using pre-allocated vector to save memory
       let target = tempVec.copy(particle.sphere).multiplyScalar(breathing * fieldExpansion);
 
-      // Add slight drift to field particles
-      if (sphereToField > 0.1) {
-        target.x += Math.sin(time * 0.15 + particle.seed) * 0.002 * 150 * sphereToField;
-        target.y += Math.cos(time * 0.12 + particle.seed) * 0.002 * 150 * sphereToField;
+      // Add slight drift to field particles (Twinkle/Organic Drift)
+      if (sphereToField > 0.05) {
+        target.x += Math.sin(time * 0.12 + particle.seed) * 0.4 * sphereToField;
+        target.y += Math.cos(time * 0.08 + particle.seed) * 0.4 * sphereToField;
+        target.z += Math.sin(time * 0.1 + particle.seed * 2.0) * 0.2 * sphereToField;
       }
       
       // Determine active states
