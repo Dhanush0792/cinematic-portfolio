@@ -160,6 +160,14 @@ function ParticleController({ progress, scrollState, activePanel, setActivePanel
   const pointsRef = useRef<THREE.Points>(null);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const tempVec = useMemo(() => new THREE.Vector3(), []);
+  const tempCenter = useMemo(() => new THREE.Vector3(), []);
+
+  // Initialize particles strictly on the client
+  const [particles, setParticles] = useState<ParticleData[]>([]);
+  useEffect(() => {
+    setParticles(makeParticles());
+  }, []);
 
   // Reset selection when we leave the projects panel
   useEffect(() => {
@@ -167,8 +175,6 @@ function ParticleController({ progress, scrollState, activePanel, setActivePanel
       setSelectedIndex(null);
     }
   }, [activePanel]);
-
-  const particles = useMemo(makeParticles, []);
   const positions = useMemo(() => new Float32Array(COUNT * 3), []);
   const colors = useMemo(() => new Float32Array(COUNT * 3), []);
   const sizes = useMemo(() => new Float32Array(COUNT), []);
@@ -239,13 +245,13 @@ function ParticleController({ progress, scrollState, activePanel, setActivePanel
     const breathing = 1 + Math.sin(time * 0.6) * 0.02;
     const fieldExpansion = THREE.MathUtils.lerp(1, 6/2.5, sphereToField);
 
-    if (!particles || !geometry.attributes.position) return;
+    if (!particles || particles.length === 0 || !geometry.attributes.position) return;
     
     for (let index = 0; index < particles.length; index += 1) {
       const particle = particles[index];
       
-      // Calculate target position
-      let target = particle.sphere.clone().multiplyScalar(breathing * fieldExpansion);
+      // Calculate target position using pre-allocated vector to save memory
+      let target = tempVec.copy(particle.sphere).multiplyScalar(breathing * fieldExpansion);
 
       // Add slight drift to field particles
       if (sphereToField > 0.1) {
@@ -428,11 +434,6 @@ export function ParticleScene(props: ParticleSceneProps) {
         <color attach="background" args={["#050507"]} />
         <CameraRig progress={props.progress} />
         <ParticleController {...props} />
-        <EffectComposer disableNormalPass>
-          <Bloom luminanceThreshold={0.85} luminanceSmoothing={0.9} intensity={0.25} radius={0.8} />
-          <HueSaturation saturation={-0.15} />
-          <BrightnessContrast brightness={-0.02} contrast={0.1} />
-        </EffectComposer>
       </Canvas>
     </div>
   );
