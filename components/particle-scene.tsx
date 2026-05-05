@@ -239,6 +239,8 @@ function ParticleController({ progress, scrollState, activePanel, setActivePanel
     const breathing = 1 + Math.sin(time * 0.6) * 0.02;
     const fieldExpansion = THREE.MathUtils.lerp(1, 6/2.5, sphereToField);
 
+    if (!particles || !geometry.attributes.position) return;
+    
     for (let index = 0; index < particles.length; index += 1) {
       const particle = particles[index];
       
@@ -375,7 +377,6 @@ function ParticleController({ progress, scrollState, activePanel, setActivePanel
     geometry.attributes.position.needsUpdate = true;
     geometry.attributes.color.needsUpdate = true;
     geometry.attributes.size.needsUpdate = true;
-    geometry.attributes.alpha.needsUpdate = true;
     geometry.attributes.alpha.needsUpdate = true;
   });
 

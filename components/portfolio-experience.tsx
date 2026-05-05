@@ -3,7 +3,10 @@
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ActivePanel, ParticleScene } from "@/components/particle-scene";
+import dynamic from "next/dynamic";
+
+const ParticleScene = dynamic(() => import("@/components/particle-scene").then(mod => mod.ParticleScene), { ssr: false });
+import { ActivePanel } from "@/components/particle-scene";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
