@@ -162,7 +162,7 @@ function ParticleController({ progress, scrollState, activePanel, setActivePanel
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
   // Reset selection when we leave the projects panel
-  useMemo(() => {
+  useEffect(() => {
     if (activePanel !== "projects") {
       setSelectedIndex(null);
     }
@@ -375,6 +375,7 @@ function ParticleController({ progress, scrollState, activePanel, setActivePanel
     geometry.attributes.position.needsUpdate = true;
     geometry.attributes.color.needsUpdate = true;
     geometry.attributes.size.needsUpdate = true;
+    geometry.attributes.alpha.needsUpdate = true;
     geometry.attributes.alpha.needsUpdate = true;
   });
 
