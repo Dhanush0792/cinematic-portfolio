@@ -1,0 +1,2184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dhanush Siddilingam | Classified Portfolio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Special Elite for typewriter/classified documents, Courier Prime & Inter for clean text -->
+    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&family=Inter:wght@300;400;600;800&family=Special+Elite&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #050505;
+            --primary-amber: #ffb000;
+            --primary-blue: #00e5ff;
+            --primary-purple: #c51162;
+            --folder-color: #e2cfa7;
+            --font-monospace: 'Courier Prime', monospace;
+            --font-serif: 'Special Elite', serif;
+            --font-sans: 'Inter', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body, html {
+            background-color: var(--bg-color);
+            color: #e0e0e0;
+            font-family: var(--font-sans);
+            overflow-x: hidden;
+            width: 100%;
+            min-height: 100%;
+        }
+
+        /* Scroller indicator */
+        #scroll-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 600vh; /* Map scroll progress to camera position */
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* WebGL Canvas */
+        #webgl-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            outline: none;
+        }
+
+        /* Ambient Sound Toggle */
+        #audio-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid rgba(255, 176, 0, 0.3);
+            color: var(--primary-amber);
+            font-family: var(--font-monospace);
+            font-size: 11px;
+            padding: 8px 12px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.3s ease;
+            pointer-events: auto;
+            border-radius: 2px;
+        }
+        #audio-toggle:hover {
+            background: var(--primary-amber);
+            color: #000;
+            box-shadow: 0 0 10px rgba(255, 176, 0, 0.5);
+        }
+
+        /* Color Grading Toggle */
+        #grade-toggle {
+            position: fixed;
+            top: 20px;
+            right: 160px;
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid rgba(255, 176, 0, 0.3);
+            color: var(--primary-amber);
+            font-family: var(--font-monospace);
+            font-size: 11px;
+            padding: 8px 12px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.3s ease;
+            pointer-events: auto;
+            border-radius: 2px;
+        }
+        #grade-toggle:hover {
+            background: var(--primary-amber);
+            color: #000;
+            box-shadow: 0 0 10px rgba(255, 176, 0, 0.5);
+        }
+
+        /* Grade styles */
+        body.grade-noir #webgl-canvas {
+            filter: grayscale(100%) contrast(125%) brightness(85%);
+        }
+        body.grade-vintage #webgl-canvas {
+            filter: sepia(85%) contrast(110%) brightness(80%) hue-rotate(-8deg);
+        }
+
+        /* HUD overlays */
+        .hud-text {
+            position: fixed;
+            font-family: var(--font-monospace);
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.4);
+            pointer-events: none;
+            z-index: 5;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        #hud-top-left { top: 20px; left: 20px; }
+        #hud-bottom-left { bottom: 20px; left: 20px; }
+        #hud-bottom-right { bottom: 20px; right: 20px; }
+
+        /* Act Prompts / Scrolling Guide */
+        #prompt-container {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 5;
+            text-align: center;
+            pointer-events: none;
+            font-family: var(--font-monospace);
+            transition: opacity 0.5s ease;
+        }
+        .prompt-title {
+            font-size: 14px;
+            color: var(--primary-amber);
+            margin-bottom: 8px;
+            text-shadow: 0 0 5px rgba(255, 176, 0, 0.5);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+        .prompt-subtitle {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        /* Flashlight/Torch Cursor overlay for ACT 4 */
+        #flashlight-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 3;
+            mix-blend-mode: multiply;
+            background: radial-gradient(circle 180px at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(255,255,255,1) 0%, rgba(200,200,200,0.8) 50%, rgba(0,0,0,0) 100%);
+            opacity: 0;
+            transition: opacity 1s ease;
+        }
+        
+        /* Film grain overlay */
+        #film-grain {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 99;
+            opacity: 0.05;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+        /* Vignette overlay */
+        #vignette {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 4;
+            background: radial-gradient(circle, transparent 30%, rgba(0,0,0,0.9) 100%);
+        }
+
+        /* Dossier drawer from bottom */
+        #dossier-drawer {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translate(-50%, 100%);
+            width: 90%;
+            max-width: 850px;
+            height: 75vh;
+            background: #e2cfa7; /* Manila folder color */
+            color: #1a1a1a;
+            border-radius: 10px 10px 0 0;
+            box-shadow: 0 -15px 40px rgba(0, 0, 0, 0.8);
+            z-index: 100;
+            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            font-family: var(--font-monospace);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border: 4px solid #cbae7c;
+        }
+        #dossier-drawer.active {
+            transform: translate(-50%, 0);
+        }
+        #dossier-tab {
+            background: #cbae7c;
+            height: 40px;
+            padding: 10px 20px;
+            font-family: var(--font-serif);
+            font-size: 14px;
+            text-transform: uppercase;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid rgba(0,0,0,0.1);
+        }
+        #dossier-close {
+            background: none;
+            border: 1px solid #1a1a1a;
+            color: #1a1a1a;
+            font-family: var(--font-monospace);
+            padding: 2px 8px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        #dossier-close:hover {
+            background: #1a1a1a;
+            color: #e2cfa7;
+        }
+        #dossier-body {
+            padding: 30px;
+            flex-grow: 1;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            background: repeating-linear-gradient(#e2cfa7, #e2cfa7 23px, #d1bd95 24px);
+            line-height: 24px;
+            position: relative;
+        }
+        /* Realistic Coffee Cup Ring Stain */
+        #dossier-body::after {
+            content: '';
+            position: absolute;
+            bottom: 35px;
+            right: 45px;
+            width: 130px;
+            height: 130px;
+            border: 3px double rgba(115, 65, 35, 0.28);
+            border-radius: 50%;
+            pointer-events: none;
+            filter: blur(1.2px) rotate(22deg);
+            transform: scaleX(1.06);
+            box-shadow: inset 0 0 12px rgba(115, 65, 35, 0.1), 0 0 10px rgba(115, 65, 35, 0.06);
+        }
+        #dossier-body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 45px;
+            width: 2px;
+            height: 100%;
+            background: rgba(255, 0, 0, 0.25); /* Margin line */
+        }
+        .dossier-content-wrapper {
+            margin-left: 35px;
+            position: relative;
+        }
+        .dossier-stamp {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            border: 4px double #8a2525;
+            color: #8a2525;
+            font-family: var(--font-serif);
+            font-size: 18px;
+            font-weight: bold;
+            padding: 5px 12px;
+            transform: rotate(8deg);
+            opacity: 0.85;
+            letter-spacing: 2px;
+            z-index: 10;
+        }
+        .dossier-heading {
+            font-family: var(--font-serif);
+            font-size: 24px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #1a1a1a;
+            padding-bottom: 5px;
+            color: #000;
+        }
+        .dossier-subheading {
+            font-family: var(--font-serif);
+            font-size: 18px;
+            margin-top: 15px;
+            margin-bottom: 5px;
+            color: #1a1a1a;
+            border-bottom: 1px dashed rgba(0,0,0,0.2);
+            padding-bottom: 3px;
+        }
+        .dossier-field {
+            margin-bottom: 10px;
+        }
+        .dossier-label {
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #333;
+            display: inline-block;
+            width: 150px;
+        }
+        .dossier-value {
+            color: #111;
+        }
+        .dossier-list-item {
+            margin-left: 20px;
+            list-style-type: square;
+            margin-bottom: 5px;
+        }
+        .dossier-link {
+            color: #8a2525;
+            font-weight: bold;
+            text-decoration: underline;
+            pointer-events: auto;
+            cursor: pointer;
+        }
+        .dossier-link:hover {
+            color: #000;
+        }
+
+        /* Profile details layout (dossier text + photo) */
+        .profile-layout {
+            display: flex;
+            gap: 30px;
+            align-items: flex-start;
+        }
+        .profile-text {
+            flex: 1;
+        }
+        .profile-photo-container {
+            width: 160px;
+            border: 4px solid #fff;
+            box-shadow: 2px 2px 10px rgba(0,0,0,0.15);
+            background: #fff;
+            padding: 6px;
+            transform: rotate(-3deg);
+            margin-top: 10px;
+        }
+        .profile-photo-container img {
+            width: 100%;
+            height: auto;
+            display: block;
+            filter: grayscale(100%) contrast(120%);
+        }
+
+        /* Error/Fallback display */
+        #error-fallback {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            color: #f00;
+            font-family: var(--font-monospace);
+            padding: 40px;
+            display: none;
+            z-index: 10000;
+            overflow-y: auto;
+        }
+
+        #room-ambient-audio {
+            display: none;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.9);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-amber);
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="webgl-canvas"></canvas>
+    
+    <!-- Welcome Overlay for Cinematic Entrance & Autoplay Bypass -->
+    <div id="welcome-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #020202; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.8s ease; font-family: 'Courier Prime', monospace;">
+        <h1 style="font-family: 'Special Elite', serif; font-size: 26px; color: #ffb000; margin-bottom: 15px; letter-spacing: 4px; text-shadow: 0 0 10px rgba(255, 176, 0, 0.4); text-transform: uppercase;">DEPT. OF INTELLIGENCE</h1>
+        <p style="font-size: 11px; color: rgba(255,255,255,0.4); margin-bottom: 35px; letter-spacing: 2px; text-transform: uppercase;">CASE FILE #0792-D // LEVEL 5 CLEARANCE</p>
+        <button id="enter-btn" style="background: transparent; border: 1px solid #ffb000; color: #ffb000; font-size: 12px; padding: 12px 30px; cursor: pointer; letter-spacing: 3px; text-transform: uppercase; transition: all 0.3s; outline: none; border-radius: 2px;">INITIALIZE Dossier</button>
+    </div>
+    
+    <!-- Audio Elements -->
+    <audio id="room-ambient-audio" loop>
+        <source src="https://assets.mixkit.co/active_storage/sfx/1781/1781-preview.mp3" type="audio/mp3">
+    </audio>
+     <!-- neon-hum-audio removed -->
+    <audio id="light-flicker-audio">
+        <source src="https://assets.mixkit.co/active_storage/sfx/2568/2568-84.wav" type="audio/wav">
+    </audio>
+
+    <div id="scroll-container"></div>
+    <div id="film-grain"></div>
+    <div id="vignette"></div>
+    <div id="flashlight-overlay"></div>
+
+    <button id="grade-toggle">GRADE: CINEMATIC</button>
+    <button id="audio-toggle">Sound: On</button>
+
+    <div class="hud-text" id="hud-top-left">DEPT. OF INTELLIGENCE // CASE FILE: #0792-D</div>
+    <div class="hud-text" id="hud-bottom-left">CLASSIFIED PORTFOLIO // DHANUSH SIDDILINGAM</div>
+    <div class="hud-text" id="hud-bottom-right">ACT 1: ARRIVAL // SCROLL TO INVESTIGATE</div>
+
+    <div id="prompt-container">
+        <div class="prompt-title" id="act-title">THE VOID</div>
+        <div class="prompt-subtitle" id="act-subtitle">Scroll down slowly to penetrate the workspace...</div>
+    </div>
+
+    <!-- Dossier Drawer -->
+    <div id="dossier-drawer">
+        <div id="dossier-tab">
+            <span id="dossier-tab-title">CLASSIFIED // DOSSIER FILE</span>
+            <button id="dossier-close">CLOSE [X]</button>
+        </div>
+        <div id="dossier-body">
+            <div class="dossier-stamp" id="dossier-stamp">RESTRICTED</div>
+            <div class="dossier-content-wrapper" id="dossier-target-content">
+                <!-- Dynamically injected -->
+            </div>
+        </div>
+    </div>
+
+    <div id="error-fallback">
+        <h2>ENGINE INITIALIZATION CRITICAL FAILURE</h2>
+        <p>Three.js WebGL rendering could not initialize due to security permissions or API support.</p>
+        <div id="error-msg" style="margin-top: 20px; white-space: pre-wrap;"></div>
+    </div>
+
+    <!-- CDNs -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    
+    <script>
+        // Catch initialization errors and show backup
+        window.addEventListener('error', function(e) {
+            document.getElementById('error-fallback').style.display = 'block';
+            document.getElementById('error-msg').textContent += '\n' + e.message + ' at ' + e.filename + ':' + e.lineno;
+        });
+
+        // ==========================================
+        // 0. PORTFOLIO DATA (Dhanush Siddilingam Complete Resume Data)
+        // ==========================================
+        const PORTFOLIO_DATA = {
+            profile: {
+                title: "DHANUSH SIDDILINGAM // CORE INTEL",
+                stamp: "TOP SECRET",
+                html: `
+                    <div class="profile-layout">
+                        <div class="profile-text">
+                            <h3 class="dossier-heading">IDENTITY DOSSIER</h3>
+                            <div class="dossier-field"><span class="dossier-label">SUBJECT:</span><span class="dossier-value">Dhanush Siddilingam</span></div>
+                            <div class="dossier-field"><span class="dossier-label">ROLE:</span><span class="dossier-value">Full-Stack Developer | AI Developer | SaaS Builder</span></div>
+                            <div class="dossier-field"><span class="dossier-label">CLEARANCE:</span><span class="dossier-value">Level 5 (AI Product Architect)</span></div>
+                            <div class="dossier-field"><span class="dossier-label">GRADUATION:</span><span class="dossier-value">June 2026 (SVCE ECE)</span></div>
+                            
+                            <h4 class="dossier-subheading">CORE MISSION</h4>
+                            <p>Build AI-powered products, SaaS businesses, and scalable software systems that solve real-world problems.</p>
+                            
+                            <h4 class="dossier-subheading">LONG-TERM GOAL</h4>
+                            <p>Create successful technology businesses, achieve financial independence, support family goals, and build products used by people worldwide.</p>
+                        </div>
+                        <div class="profile-photo-container">
+                            <img src="WhatsApp Image 2026-05-16 at 20.12.14.jpeg" alt="Dhanush Siddilingam Profile Photo">
+                        </div>
+                    </div>
+                `
+            },
+            project1: {
+                title: "AI INFRASTRUCTURE // AI MEMORY SDK",
+                stamp: "OPERATIONAL",
+                html: `
+                    <h3 class="dossier-heading">CASE FILE: AI MEMORY SDK</h3>
+                    <div class="dossier-field"><span class="dossier-label">PROJECT NAME:</span><span class="dossier-value">AI Memory SDK (Long-Term Memory Infrastructure)</span></div>
+                    <div class="dossier-field"><span class="dossier-label">CATEGORY:</span><span class="dossier-value">AI Infrastructure</span></div>
+                    <div class="dossier-field"><span class="dossier-label">TECH STACK:</span><span class="dossier-value">Python, FastAPI, PostgreSQL, Supabase, JWT, REST APIs</span></div>
+                    
+                    <h4 class="dossier-subheading">PROJECT OVERVIEW</h4>
+                    <p>Production-grade memory infrastructure designed to inject dynamic, long-term memory capabilities into AI applications.</p>
+                    
+                    <h4 class="dossier-subheading">DESIGN CAPABILITIES</h4>
+                    <ul>
+                        <li class="dossier-list-item">Long-term memory storage & structured memory management.</li>
+                        <li class="dossier-list-item">High-speed retrieval and context engineering loops.</li>
+                        <li class="dossier-list-item">Robust authentication, audit logging, and secure API key management.</li>
+                    </ul>
+                    
+                    <h4 class="dossier-subheading">HIGHLIGHTS</h4>
+                    <ul>
+                        <li class="dossier-list-item">Versioned memory storage structures.</li>
+                        <li class="dossier-list-item">Role-based access control and detailed audit logs.</li>
+                    </ul>
+                `
+            },
+            saas: {
+                title: "SaaS PRODUCTS // PORTFOLIO VENTURES",
+                stamp: "MULTI-SYSTEM",
+                html: `
+                    <h3 class="dossier-heading">SaaS & PRODUCT VENTURES</h3>
+                    
+                    <h4 class="dossier-subheading">1. ARIA — AI Productivity Platform</h4>
+                    <div class="dossier-field"><span class="dossier-label">FOCUS:</span><span class="dossier-value">Smart reminders, focus, AI-enhanced workflows</span></div>
+                    <p>An intelligent task management and productivity application focused on helping users organize work, manage tasks, and improve daily execution through a refined mobile experience.</p>
+                    
+                    <h4 class="dossier-subheading">2. STIRA — Behavioral Intelligence</h4>
+                    <div class="dossier-field"><span class="dossier-label">FOCUS:</span><span class="dossier-value">Behavioral analytics, intelligent recommendations</span></div>
+                    <p>A data-driven platform designed to analyze behavioral patterns, user actions, habits, and interaction data to generate meaningful, personalized recommendations.</p>
+                    
+                    <h4 class="dossier-subheading">3. UNSCROLLR — Digital Wellbeing</h4>
+                    <div class="dossier-field"><span class="dossier-label">FOCUS:</span><span class="dossier-value">Digital wellbeing, habit building, focus</span></div>
+                    <p>A mobile application designed to help users reduce excessive social media consumption and regain control over their attention, habits, and daily digital routines.</p>
+                    
+                    <h4 class="dossier-subheading">4. SECUREVISION — Security & Monitoring</h4>
+                    <div class="dossier-field"><span class="dossier-label">FOCUS:</span><span class="dossier-value">Surveillance workflows, data protection</span></div>
+                    <p>A surveillance and monitoring platform focused on secure backend workflows, intelligent observation, and security-focused systems.</p>
+                `
+            },
+            skills: {
+                title: "TECHNICAL MATRIX // CAPABILITIES",
+                stamp: "VERIFIED",
+                html: `
+                    <h3 class="dossier-heading">TECHNICAL ASSET MATRIX</h3>
+                    
+                    <div class="dossier-field"><span class="dossier-label">LANGUAGES:</span><span class="dossier-value">Python, Java, SQL, C</span></div>
+                    <div class="dossier-field"><span class="dossier-label">BACKEND:</span><span class="dossier-value">FastAPI, REST APIs, JWT, API Design, Backend Architecture</span></div>
+                    <div class="dossier-field"><span class="dossier-label">AI & INTERFACES:</span><span class="dossier-value">Prompt Engineering, LLM Workflows, AI Evaluation, AI Product Development, Memory Systems, Context Engineering</span></div>
+                    <div class="dossier-field"><span class="dossier-label">DATABASES:</span><span class="dossier-value">PostgreSQL, Supabase</span></div>
+                    <div class="dossier-field"><span class="dossier-label">DEVELOPMENT TOOLS:</span><span class="dossier-value">Git, GitHub, Postman, VS Code</span></div>
+                    <div class="dossier-field"><span class="dossier-label">PRODUCT DEV:</span><span class="dossier-value">SaaS Development, MVP Building, Product Design Thinking, Startup Execution</span></div>
+                `
+            },
+            experience: {
+                title: "FIELD RECORDS // EXPERIENCE",
+                stamp: "INTEL LOG",
+                html: `
+                    <style>
+                        .experience-card {
+                            background: rgba(0, 0, 0, 0.04);
+                            border-left: 4px solid #8a2525;
+                            padding: 12px 16px;
+                            margin-bottom: 15px;
+                            border-radius: 0 4px 4px 0;
+                            box-shadow: 1px 1px 3px rgba(0,0,0,0.05);
+                        }
+                        .experience-title {
+                            font-family: var(--font-serif);
+                            font-size: 16px;
+                            font-weight: bold;
+                            color: #8a2525;
+                            margin-bottom: 4px;
+                        }
+                        .keyword-tag {
+                            display: inline-block;
+                            background: rgba(138, 37, 37, 0.1);
+                            color: #8a2525;
+                            padding: 2px 6px;
+                            border-radius: 3px;
+                            font-size: 10px;
+                            margin-right: 5px;
+                            margin-top: 5px;
+                            font-weight: bold;
+                        }
+                    </style>
+                    <h3 class="dossier-heading">EXPERIENCE CHRONOLOGY</h3>
+                    
+                    <div class="experience-card">
+                        <div class="experience-title">Microsoft Azure AI Internship</div>
+                        <div class="dossier-field"><span class="dossier-label">PROVIDER:</span><span class="dossier-value">Microsoft & Edunet Foundation</span></div>
+                        <div class="dossier-field"><span class="dossier-label">TIMELINE:</span><span class="dossier-value">May 2025 – June 2025</span></div>
+                        <h4 class="dossier-subheading" style="margin-top: 8px;">KEY ROLES:</h4>
+                        <ul>
+                            <li class="dossier-list-item">Evaluated AI model outputs and analyzed inconsistencies.</li>
+                            <li class="dossier-list-item">Improved response quality and reliability.</li>
+                            <li class="dossier-list-item">Worked with AI workflows and model evaluation processes.</li>
+                        </ul>
+                    </div>
+
+                    <div class="experience-card">
+                        <div class="experience-title">Full Stack Development Training</div>
+                        <div class="dossier-field"><span class="dossier-label">PROVIDER:</span><span class="dossier-value">KodNest</span></div>
+                        <div class="dossier-field"><span class="dossier-label">TIMELINE:</span><span class="dossier-value">2025 – Present</span></div>
+                        <h4 class="dossier-subheading" style="margin-top: 8px;">KEY ROLES:</h4>
+                        <ul>
+                            <li class="dossier-list-item">Training in Full Stack Development.</li>
+                            <li class="dossier-list-item">Backend development concepts & Web development fundamentals.</li>
+                            <li class="dossier-list-item">Java programming, SQL and database management.</li>
+                            <li class="dossier-list-item">Software development best practices and problem-solving exercises.</li>
+                        </ul>
+                        <div style="margin-top: 8px;">
+                            <span class="keyword-tag">Full Stack Development</span>
+                            <span class="keyword-tag">Java</span>
+                            <span class="keyword-tag">SQL</span>
+                            <span class="keyword-tag">Backend Development</span>
+                            <span class="keyword-tag">Software Engineering</span>
+                            <span class="keyword-tag">Web Development</span>
+                        </div>
+                    </div>
+
+                    <div class="experience-card">
+                        <div class="experience-title">Listing Partner (Freelance)</div>
+                        <div class="dossier-field"><span class="dossier-label">PROVIDER:</span><span class="dossier-value">WEEX</span></div>
+                        <div class="dossier-field"><span class="dossier-label">TIMELINE:</span><span class="dossier-value">February 2025 – Present</span></div>
+                        <h4 class="dossier-subheading" style="margin-top: 8px;">KEY ROLES:</h4>
+                        <ul>
+                            <li class="dossier-list-item">Analyzed structured datasets.</li>
+                            <li class="dossier-list-item">Performed data validation and quality checks.</li>
+                            <li class="dossier-list-item">Conducted listing research and verification.</li>
+                        </ul>
+                    </div>
+
+                    <div class="experience-card">
+                        <div class="experience-title">Industry Simulations</div>
+                        <div class="dossier-field"><span class="dossier-label">SIMULATIONS:</span><span class="dossier-value">JPMorgan Forage & Fidelity Forage</span></div>
+                        <h4 class="dossier-subheading" style="margin-top: 8px;">KEY ROLES:</h4>
+                        <ul>
+                            <li class="dossier-list-item">Exposure to finance and investment workflows.</li>
+                            <li class="dossier-list-item">Professional business simulation exercises.</li>
+                        </ul>
+                    </div>
+                `
+            },
+            education: {
+                title: "ACADEMIC DOSSIER // CHRONOLOGY",
+                stamp: "SECURE NODE",
+                html: `
+                    <style>
+                        .academic-card {
+                            background: rgba(0, 0, 0, 0.04);
+                            border-left: 4px solid #8a2525;
+                            padding: 12px 16px;
+                            margin-bottom: 15px;
+                            border-radius: 0 4px 4px 0;
+                            box-shadow: 1px 1px 3px rgba(0,0,0,0.05);
+                        }
+                        .academic-title {
+                            font-family: var(--font-serif);
+                            font-size: 16px;
+                            font-weight: bold;
+                            color: #8a2525;
+                            margin-bottom: 4px;
+                        }
+                    </style>
+                    <h3 class="dossier-heading">ACADEMIC CREDENTIALS</h3>
+                    
+                    <div class="academic-card">
+                        <div class="academic-title">Bachelor of Technology (B.Tech)</div>
+                        <div class="dossier-field"><span class="dossier-label">BRANCH:</span><span class="dossier-value">Electronics and Communication Engineering (ECE)</span></div>
+                        <div class="dossier-field"><span class="dossier-label">INSTITUTION:</span><span class="dossier-value">Sri Venkateswara College of Engineering (SVCE), Tirupati</span></div>
+                        <div class="dossier-field"><span class="dossier-label">TIMELINE:</span><span class="dossier-value">2022 – 2026</span></div>
+                        <div class="dossier-field"><span class="dossier-label">SCORE:</span><span class="dossier-value">CGPA: 8.83 / 10</span></div>
+                    </div>
+
+                    <div class="academic-card">
+                        <div class="academic-title">Intermediate (Class XII)</div>
+                        <div class="dossier-field"><span class="dossier-label">INSTITUTION:</span><span class="dossier-value">Gurudeva Vasistah Junior College, Kodur</span></div>
+                        <div class="dossier-field"><span class="dossier-label">TIMELINE:</span><span class="dossier-value">2020 – 2022</span></div>
+                        <div class="dossier-field"><span class="dossier-label">SCORE:</span><span class="dossier-value">Percentage: 87.6%</span></div>
+                    </div>
+
+                    <div class="academic-card">
+                        <div class="academic-title">SSC (Class X)</div>
+                        <div class="dossier-field"><span class="dossier-label">INSTITUTION:</span><span class="dossier-value">Silver Bells English Medium High School, Kodur</span></div>
+                        <div class="dossier-field"><span class="dossier-label">TIMELINE:</span><span class="dossier-value">Year of Passing: 2020</span></div>
+                        <div class="dossier-field"><span class="dossier-label">SCORE:</span><span class="dossier-value">CGPA: 10 / 10</span></div>
+                    </div>
+                    
+                    <h4 class="dossier-subheading">LANGUAGES WORKED</h4>
+                    <ul>
+                        <li class="dossier-list-item">English (C1 Clearance)</li>
+                        <li class="dossier-list-item">Telugu (Native Command)</li>
+                        <li class="dossier-list-item">Hindi (B2 Communication)</li>
+                    </ul>
+                    
+                    <h4 class="dossier-subheading">SECURE CHANNEL LINKS</h4>
+                    <div class="dossier-field"><span class="dossier-label">SECURE MAIL:</span><span class="dossier-value"><a class="dossier-link" href="mailto:dhanushsiddilingam@gmail.com">dhanushsiddilingam@gmail.com</a></span></div>
+                    <div class="dossier-field"><span class="dossier-label">SECURE GIT:</span><span class="dossier-value"><a class="dossier-link" href="https://github.com/Dhanush0792" target="_blank">github.com/Dhanush0792</a></span></div>
+                    <div class="dossier-field"><span class="dossier-label">LINKEDIN:</span><span class="dossier-value"><a class="dossier-link" href="https://linkedin.com/in/dhanush-siddilingam-7a1bb9270" target="_blank">linkedin.com/in/dhanush-siddilingam</a></span></div>
+                `
+            },
+            easter_egg: {
+                title: "SECRET DATA // INTRUDER RECORD",
+                stamp: "EYES ONLY",
+                html: `
+                    <h3 class="dossier-heading">RESTRICTED TRANSMISSION</h3>
+                    <div class="dossier-field"><span class="dossier-label">DECRYPTED:</span><span class="dossier-value">True (Node Active)</span></div>
+                    <div class="dossier-field"><span class="dossier-label">SUBJECT:</span><span class="dossier-value">Dhanush Siddilingam</span></div>
+                    <div class="dossier-field"><span class="dossier-label">SECTOR:</span><span class="dossier-value">Classified AI Lab</span></div>
+                    
+                    <h4 class="dossier-subheading">MEMORANDUM OF CAPABILITY</h4>
+                    <p>Congratulations, Agent. You have successfully bypassed the filing cabinet mechanical locks. This secure file confirms Dhanush's credentials to build highly optimized 3D web environments, robust backend microservices, and reliable SaaS products.</p>
+                    <p style="margin-top: 10px; font-style: italic; color: #8a2525;">"Reality is merely an illusion, albeit a very persistent one."</p>
+                `
+            },
+            contacts: {
+                title: "COMMUNICATION NODE // CORE CONTACTS",
+                stamp: "RESTRICTED",
+                html: `
+                    <h3 class="dossier-heading">CONTACT CHANNELS</h3>
+                    <div class="dossier-field"><span class="dossier-label">SUBJECT:</span><span class="dossier-value">Dhanush Siddilingam</span></div>
+                    <div class="dossier-field"><span class="dossier-label">SECTOR:</span><span class="dossier-value">Secure Communications Node</span></div>
+                    
+                    <h4 class="dossier-subheading">SECURE CHANNELS</h4>
+                    <div class="dossier-field"><span class="dossier-label">SECURE MAIL:</span><span class="dossier-value"><a class="dossier-link" href="mailto:dhanushsiddilingam@gmail.com">dhanushsiddilingam@gmail.com</a></span></div>
+                    <div class="dossier-field"><span class="dossier-label">SECURE GIT:</span><span class="dossier-value"><a class="dossier-link" href="https://github.com/Dhanush0792" target="_blank">github.com/Dhanush0792</a></span></div>
+                    <div class="dossier-field"><span class="dossier-label">LINKEDIN:</span><span class="dossier-value"><a class="dossier-link" href="https://www.linkedin.com/in/dhanush-siddilingam/" target="_blank">linkedin.com/in/dhanush-siddilingam</a></span></div>
+                    
+                    <h4 class="dossier-subheading">CLASSIFIED DOSSIER ARCHIVE</h4>
+                    <div class="dossier-field"><span class="dossier-label">RESUME PDF:</span><span class="dossier-value"><a class="dossier-link" href="DHANUSH_SIDDILINGAM_AIDEVELOPER_RESUME.pdf" download>Download Resume (PDF)</a></span></div>
+                `
+            }
+        };
+
+        // ==========================================
+        // 1. SETUP CANVAS & THREE.JS ENGINE
+        // ==========================================
+        const canvas = document.getElementById('webgl-canvas');
+        let scene, camera, cameraGroup, renderer;
+        let ambientLight, pointLight, monitorLight, deskLight;
+        let isLightOn = false;
+        let lightSwitchMesh, corkboardMesh, monitorMesh;
+        let interactiveObjects = [];
+        let particlesSystem, steamSystem;
+        let threadLines = [];
+        
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+        let currentAct = 1;
+        
+        function initEngine() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x020202);
+            scene.fog = new THREE.FogExp2(0x020202, 0.04);
+
+            cameraGroup = new THREE.Group();
+            scene.add(cameraGroup);
+
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
+            camera.position.set(0, 0, 0); 
+            camera.rotation.y = Math.PI; // Face backward to align with group +Z lookAt direction
+            cameraGroup.add(camera);
+
+            cameraGroup.position.set(0, 1.8, 12); 
+
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+            setupLights();
+            build3DEnvironment();
+            buildDustSystem();
+
+            window.addEventListener('resize', onWindowResize);
+        }
+
+        // ==========================================
+        // 2. LIGHTS SYSTEM
+        // ==========================================
+        function setupLights() {
+            ambientLight = new THREE.AmbientLight(0xffffff, 0.015);
+            scene.add(ambientLight);
+
+            monitorLight = new THREE.PointLight(0x00e5ff, 0.6, 6);
+            monitorLight.position.set(0, 0.7, -0.2);
+            monitorLight.castShadow = true;
+            monitorLight.shadow.bias = -0.002;
+            scene.add(monitorLight);
+
+            pointLight = new THREE.PointLight(0xffb000, 0, 15);
+            pointLight.position.set(0, 2.5, 0.2);
+            pointLight.castShadow = true;
+            pointLight.shadow.mapSize.width = 1024;
+            pointLight.shadow.mapSize.height = 1024;
+            pointLight.shadow.bias = -0.003;
+            scene.add(pointLight);
+
+            const bulbGeo = new THREE.SphereGeometry(0.12, 16, 16);
+            const bulbMat = new THREE.MeshBasicMaterial({ color: 0x222222 });
+            const bulbMesh = new THREE.Mesh(bulbGeo, bulbMat);
+            bulbMesh.name = "bulb_geo";
+            bulbMesh.position.copy(pointLight.position);
+            scene.add(bulbMesh);
+
+            const wireGeo = new THREE.CylinderGeometry(0.006, 0.006, 2, 8);
+            const wireMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
+            const wireMesh = new THREE.Mesh(wireGeo, wireMat);
+            wireMesh.position.set(0, 3.5, 0.2);
+            scene.add(wireMesh);
+        }
+
+        // ==========================================
+        // 3. BUILD 3D WORLD GEOMETRIES
+        // ==========================================
+        function build3DEnvironment() {
+            // Room
+            const roomGeo = new THREE.BoxGeometry(10, 5, 20);
+            const roomMat = new THREE.MeshStandardMaterial({
+                color: 0x181818,
+                roughness: 0.85,
+                metalness: 0.1,
+                side: THREE.BackSide
+            });
+            const room = new THREE.Mesh(roomGeo, roomMat);
+            room.position.set(0, 2.3, 0);
+            room.receiveShadow = true;
+            scene.add(room);
+
+            // Floor
+            const floorGeo = new THREE.PlaneGeometry(10, 20);
+            const floorMat = new THREE.MeshStandardMaterial({
+                color: 0x121212,
+                roughness: 0.9,
+                metalness: 0.05
+            });
+            const floor = new THREE.Mesh(floorGeo, floorMat);
+            floor.rotation.x = -Math.PI / 2;
+            floor.position.set(0, -0.2, 0);
+            floor.receiveShadow = true;
+            scene.add(floor);
+
+            // Desk
+            const deskTopGeo = new THREE.BoxGeometry(4, 0.15, 2);
+            const deskTopMat = new THREE.MeshStandardMaterial({
+                color: 0x261911,
+                roughness: 0.7,
+                metalness: 0.15
+            });
+            const deskTop = new THREE.Mesh(deskTopGeo, deskTopMat);
+            deskTop.position.set(0, 0.6, -1);
+            deskTop.castShadow = true;
+            deskTop.receiveShadow = true;
+            scene.add(deskTop);
+
+            // Legs
+            const legGeo = new THREE.CylinderGeometry(0.06, 0.06, 0.8, 8);
+            const legMat = new THREE.MeshStandardMaterial({ color: 0x080808, roughness: 0.5 });
+            const legPositions = [
+                [-1.8, 0.2, -1.8], [1.8, 0.2, -1.8],
+                [-1.8, 0.2, -0.2], [1.8, 0.2, -0.2]
+            ];
+            legPositions.forEach(pos => {
+                const leg = new THREE.Mesh(legGeo, legMat);
+                leg.position.set(pos[0], pos[1], pos[2]);
+                leg.castShadow = true;
+                scene.add(leg);
+            });
+
+            // Evidence Corkboard
+            const boardGeo = new THREE.PlaneGeometry(5, 2.5);
+            const boardMat = new THREE.MeshStandardMaterial({
+                color: 0x5a483a,
+                roughness: 0.95,
+                metalness: 0.0
+            });
+            corkboardMesh = new THREE.Mesh(boardGeo, boardMat);
+            corkboardMesh.position.set(0, 2.0, -4.9);
+            corkboardMesh.receiveShadow = true;
+            scene.add(corkboardMesh);
+
+            const frameGeo = new THREE.BoxGeometry(5.2, 2.7, 0.1);
+            const frameMat = new THREE.MeshStandardMaterial({ color: 0x1d130c, roughness: 0.8 });
+            const frame = new THREE.Mesh(frameGeo, frameMat);
+            frame.position.set(0, 2.0, -4.96);
+            scene.add(frame);
+
+            // Retro Terminal / Monitor (centered and moved forward for more distance to the board)
+            // Sleek Mac-style aluminum stand base
+            const standBaseGeo = new THREE.BoxGeometry(0.5, 0.02, 0.4);
+            const standBaseMat = new THREE.MeshStandardMaterial({ color: 0x555555, metalness: 0.8, roughness: 0.2 });
+            const standBase = new THREE.Mesh(standBaseGeo, standBaseMat);
+            standBase.position.set(0, 0.675 + 0.01, -0.65);
+            standBase.castShadow = true;
+            standBase.receiveShadow = true;
+            scene.add(standBase);
+
+            // Sleek neck connected to the back of the monitor
+            const standNeckGeo = new THREE.BoxGeometry(0.12, 0.6, 0.04);
+            standNeckGeo.rotateX(-0.2); // angled back
+            const standNeck = new THREE.Mesh(standNeckGeo, standBaseMat);
+            standNeck.position.set(0, 0.95, -0.72);
+            standNeck.castShadow = true;
+            scene.add(standNeck);
+
+            const monBodyGeo = new THREE.BoxGeometry(1.4, 0.9, 0.3);
+            const monBodyMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.4 });
+            const monBody = new THREE.Mesh(monBodyGeo, monBodyMat);
+            monBody.position.set(0, 1.3, -0.7); // placed slightly back to meet neck connection
+            monBody.castShadow = true;
+            scene.add(monBody);
+
+            // Emissive Screen Mesh parented to the monitor body
+            const screenGeo = new THREE.PlaneGeometry(1.3, 0.8);
+            
+            const monitorCanvas = document.createElement('canvas');
+            monitorCanvas.width = 512;
+            monitorCanvas.height = 312;
+            const mCtx = monitorCanvas.getContext('2d');
+            
+            mCtx.fillStyle = '#000000';
+            mCtx.fillRect(0, 0, 512, 312);
+            mCtx.font = '24px Courier Prime, monospace';
+            mCtx.fillStyle = '#00e5ff';
+            mCtx.fillText("SYSTEM INITIALIZING...", 30, 60);
+            mCtx.fillText("DHANUSH SIDDILINGAM DETECTED", 30, 110);
+            mCtx.font = '16px Courier Prime, monospace';
+            mCtx.fillStyle = 'rgba(0, 229, 255, 0.7)';
+            mCtx.fillText("AI AGENT ENGINE ACTIVE...", 30, 180);
+            mCtx.fillText("SCROLL DOWN TO DOLLY CAMERA", 30, 220);
+
+            const monitorTexture = new THREE.CanvasTexture(monitorCanvas);
+            const screenMat = new THREE.MeshBasicMaterial({
+                map: monitorTexture,
+                color: 0xffffff
+            });
+            monitorMesh = new THREE.Mesh(screenGeo, screenMat);
+            monitorMesh.name = "computer_monitor";
+            monitorMesh.position.set(0, 0.05, 0.16); // Local position offset
+            monBody.add(monitorMesh); // Parent it!
+
+            monitorMesh.userData = { canvas: monitorCanvas, ctx: mCtx, texture: monitorTexture };
+            interactiveObjects.push(monitorMesh);
+
+            // PHYSICAL LIGHT SWITCH (placed on the back wall next to the corkboard for visibility)
+            const switchBoxGeo = new THREE.BoxGeometry(0.15, 0.22, 0.05);
+            const switchBoxMat = new THREE.MeshStandardMaterial({ color: 0x2e2e2e, roughness: 0.5 });
+            const switchBox = new THREE.Mesh(switchBoxGeo, switchBoxMat);
+            switchBox.position.set(-2.9, 1.6, -4.86);
+            scene.add(switchBox);
+
+            const toggleGeo = new THREE.BoxGeometry(0.02, 0.06, 0.06);
+            const toggleMat = new THREE.MeshBasicMaterial({ color: 0xffb000 }); // warm glow color
+            lightSwitchMesh = new THREE.Mesh(toggleGeo, toggleMat);
+            lightSwitchMesh.name = "toggle_lever"; // internal name for rotation animation
+            lightSwitchMesh.position.set(-2.9, 1.6, -4.82);
+            scene.add(lightSwitchMesh);
+
+            // Large, highly responsive transparent hitbox for easy clicking
+            const switchHitboxGeo = new THREE.BoxGeometry(0.5, 0.5, 0.15);
+            const switchHitboxMat = new THREE.MeshBasicMaterial({ visible: false });
+            const switchHitbox = new THREE.Mesh(switchHitboxGeo, switchHitboxMat);
+            switchHitbox.name = "light_switch";
+            switchHitbox.position.set(-2.9, 1.65, -4.8);
+            scene.add(switchHitbox);
+            interactiveObjects.push(switchHitbox);
+
+            const switchLabelCanvas = document.createElement('canvas');
+            switchLabelCanvas.width = 128;
+            switchLabelCanvas.height = 64;
+            const slCtx = switchLabelCanvas.getContext('2d');
+            slCtx.fillStyle = '#222';
+            slCtx.fillRect(0, 0, 128, 64);
+            slCtx.fillStyle = '#ffb000';
+            slCtx.font = 'bold 24px Courier Prime';
+            slCtx.fillText("LIGHTS", 20, 40);
+            const slTex = new THREE.CanvasTexture(switchLabelCanvas);
+            const slGeo = new THREE.PlaneGeometry(0.24, 0.12);
+            const slMat = new THREE.MeshBasicMaterial({ map: slTex });
+            const slMesh = new THREE.Mesh(slGeo, slMat);
+            slMesh.position.set(-2.9, 1.76, -4.84);
+            scene.add(slMesh);
+
+            // ==========================================
+            // NEW ADDITIONS: 3D SPACE ENVIRONMENT
+            // ==========================================
+
+            // 1. Left Wall: Full India Map
+            const mapCanvas = document.createElement('canvas');
+            mapCanvas.width = 512;
+            mapCanvas.height = 512;
+            const mapCtx = mapCanvas.getContext('2d');
+            mapCtx.fillStyle = '#efdfbc';
+            mapCtx.fillRect(0, 0, 512, 512);
+
+            const mapTex = new THREE.CanvasTexture(mapCanvas);
+            const mapMat = new THREE.MeshStandardMaterial({ map: mapTex, roughness: 0.9 });
+            const mapMesh = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 2.2), mapMat);
+            mapMesh.position.set(-4.95, 2.0, -1.5);
+            mapMesh.rotation.y = Math.PI / 2;
+            mapMesh.receiveShadow = true;
+            scene.add(mapMesh);
+
+            const rollerGeo = new THREE.CylinderGeometry(0.03, 0.03, 2.3, 8);
+            rollerGeo.rotateX(Math.PI / 2);
+            const rollerMat = new THREE.MeshStandardMaterial({ color: 0x3d2314, roughness: 0.8 });
+            const topRoller = new THREE.Mesh(rollerGeo, rollerMat);
+            topRoller.position.set(-4.94, 3.12, -1.5);
+            topRoller.rotation.y = Math.PI / 2;
+            scene.add(topRoller);
+
+            const bottomRoller = new THREE.Mesh(rollerGeo, rollerMat);
+            bottomRoller.position.set(-4.94, 0.88, -1.5);
+            bottomRoller.rotation.y = Math.PI / 2;
+            scene.add(bottomRoller);
+
+            // Constant Picture Light above the India Map
+            const mapLight = new THREE.PointLight(0xfff1cf, 1.4, 4);
+            mapLight.position.set(-4.65, 3.25, -1.5);
+            mapLight.castShadow = true;
+            mapLight.shadow.bias = -0.001;
+            scene.add(mapLight);
+
+            // Picture lamp arm fixture
+            const fixtureArmGeo = new THREE.CylinderGeometry(0.008, 0.008, 0.25, 8);
+            fixtureArmGeo.rotateZ(Math.PI / 2);
+            const fixtureArm = new THREE.Mesh(fixtureArmGeo, new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.8, roughness: 0.2 }));
+            fixtureArm.position.set(-4.82, 3.25, -1.5);
+            scene.add(fixtureArm);
+
+            // Picture lamp shade/hood fixture
+            const fixtureShadeGeo = new THREE.CylinderGeometry(0.025, 0.025, 0.4, 12);
+            fixtureShadeGeo.rotateX(Math.PI / 2);
+            const fixtureShade = new THREE.Mesh(fixtureShadeGeo, new THREE.MeshStandardMaterial({ color: 0x1d1d1d, metalness: 0.7, roughness: 0.3 }));
+            fixtureShade.position.set(-4.68, 3.25, -1.5);
+            scene.add(fixtureShade);
+
+            const mapImg = new Image();
+            mapImg.onload = () => {
+                // Clear and draw map only
+                mapCtx.fillStyle = '#efdfbc';
+                mapCtx.fillRect(0, 0, 512, 512);
+                mapCtx.drawImage(mapImg, 0, 0, 512, 512);
+
+                mapTex.needsUpdate = true;
+            };
+            mapImg.src = "indian map.webp";
+
+            // 2. Left Wall: Academic Frame & Polaroid
+            const dipCanvas = document.createElement('canvas');
+            dipCanvas.width = 256;
+            dipCanvas.height = 180;
+            const dCtx = dipCanvas.getContext('2d');
+            dCtx.fillStyle = '#fdfbf7';
+            dCtx.fillRect(0, 0, 256, 180);
+            dCtx.strokeStyle = '#000';
+            dCtx.lineWidth = 4;
+            dCtx.strokeRect(6, 6, 244, 168);
+            dCtx.font = 'bold 11px Special Elite';
+            dCtx.fillStyle = '#111';
+            dCtx.fillText("CREDENTIAL FILES", 16, 32);
+            dCtx.font = '9px Courier Prime';
+            dCtx.fillText("SUBJECT: Dhanush Siddilingam", 16, 55);
+            dCtx.fillText("DEGREE: B.Tech (ECE)", 16, 75);
+            dCtx.fillText("INSTITUTION: SVCE", 16, 95);
+            dCtx.fillText("TIMELINE: 2022 - 2026", 16, 115);
+            dCtx.fillText("CGPA: 8.83/10.0 (SECURE)", 16, 135);
+            dCtx.strokeStyle = 'rgba(0,0,0,0.15)';
+            dCtx.strokeRect(180, 30, 60, 60);
+            dCtx.font = '8px Special Elite';
+            dCtx.fillText("VERIFIED", 185, 62);
+
+            const dipTex = new THREE.CanvasTexture(dipCanvas);
+            const dipMat = new THREE.MeshStandardMaterial({ map: dipTex, roughness: 0.7 });
+            const dipMesh = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 0.85), dipMat);
+            dipMesh.position.set(-4.95, 2.0, 1.2);
+            dipMesh.rotation.y = Math.PI / 2;
+            dipMesh.receiveShadow = true;
+            scene.add(dipMesh);
+
+            const frameGeo2 = new THREE.BoxGeometry(1.3, 0.95, 0.05);
+            const frameMat2 = new THREE.MeshStandardMaterial({ color: 0x1a120b, roughness: 0.8 });
+            const frame2 = new THREE.Mesh(frameGeo2, frameMat2);
+            frame2.position.set(-4.97, 2.0, 1.2);
+            frame2.rotation.y = Math.PI / 2;
+            scene.add(frame2);
+
+            const polCanvas = document.createElement('canvas');
+            polCanvas.width = 128;
+            polCanvas.height = 160;
+            const pCtx2 = polCanvas.getContext('2d');
+            pCtx2.fillStyle = '#fff';
+            pCtx2.fillRect(0, 0, 128, 160);
+            pCtx2.fillStyle = '#111';
+            pCtx2.fillRect(10, 10, 108, 110);
+            pCtx2.font = '9px Courier Prime';
+            pCtx2.fillText("DHANUSH S.", 14, 140);
+            pCtx2.fillStyle = 'rgba(0, 229, 255, 0.6)';
+            pCtx2.fillText("ID: #0792-D", 14, 152);
+
+            pCtx2.strokeStyle = '#00e5ff';
+            pCtx2.lineWidth = 1;
+            pCtx2.beginPath();
+            pCtx2.arc(64, 60, 20, 0, Math.PI * 2);
+            pCtx2.stroke();
+            pCtx2.beginPath();
+            pCtx2.moveTo(44, 110);
+            pCtx2.quadraticCurveTo(64, 85, 84, 110);
+            pCtx2.stroke();
+
+            const polTex = new THREE.CanvasTexture(polCanvas);
+            const polMat = new THREE.MeshStandardMaterial({ map: polTex, roughness: 0.9 });
+            const polMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.65, 0.8), polMat);
+            polMesh.position.set(-4.95, 2.8, 1.2);
+            polMesh.rotation.y = Math.PI / 2;
+            polMesh.rotation.x = 0.05;
+            polMesh.receiveShadow = true;
+            scene.add(polMesh);
+
+            // 3. Desk Indian Flag
+            const brassMat = new THREE.MeshStandardMaterial({ color: 0xcd9a3f, metalness: 0.9, roughness: 0.15 });
+            
+            const flagBaseGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.02, 16);
+            const flagBase = new THREE.Mesh(flagBaseGeo, brassMat);
+            flagBase.position.set(1.4, 0.675 + 0.01, -1.2);
+            flagBase.castShadow = true;
+            scene.add(flagBase);
+
+            const poleGeo = new THREE.CylinderGeometry(0.008, 0.008, 0.5, 8);
+            const pole = new THREE.Mesh(poleGeo, brassMat);
+            pole.position.set(1.4, 0.675 + 0.25, -1.2);
+            pole.castShadow = true;
+            scene.add(pole);
+
+            const flagCanvas = document.createElement('canvas');
+            flagCanvas.width = 128;
+            flagCanvas.height = 80;
+            const fCtx = flagCanvas.getContext('2d');
+            fCtx.fillStyle = '#FF9933';
+            fCtx.fillRect(0, 0, 128, 27);
+            fCtx.fillStyle = '#FFFFFF';
+            fCtx.fillRect(0, 27, 128, 26);
+            fCtx.fillStyle = '#128807';
+            fCtx.fillRect(0, 53, 128, 27);
+            fCtx.strokeStyle = '#000080';
+            fCtx.lineWidth = 1.5;
+            fCtx.beginPath();
+            fCtx.arc(64, 40, 9, 0, Math.PI * 2);
+            fCtx.stroke();
+            for (let a = 0; a < 24; a++) {
+                const angle = (a * Math.PI) / 12;
+                fCtx.beginPath();
+                fCtx.moveTo(64, 40);
+                fCtx.lineTo(64 + Math.cos(angle) * 9, 40 + Math.sin(angle) * 9);
+                fCtx.stroke();
+            }
+
+            const flagTex = new THREE.CanvasTexture(flagCanvas);
+            const flagBannerMat = new THREE.MeshBasicMaterial({ map: flagTex, side: THREE.DoubleSide });
+            const flagBannerGeo = new THREE.PlaneGeometry(0.3, 0.18);
+            const flagBanner = new THREE.Mesh(flagBannerGeo, flagBannerMat);
+            flagBanner.position.set(1.4 + 0.15, 0.675 + 0.4, -1.2);
+            flagBanner.castShadow = true;
+            scene.add(flagBanner);
+
+            // 4. Desk Retro Rotary Telephone (Replacing Banker's Lamp)
+            const phoneGroup = new THREE.Group();
+            phoneGroup.position.set(-1.4, 0.675, -1.2);
+            phoneGroup.rotation.y = 0.4; // angled slightly
+            scene.add(phoneGroup);
+
+            const phoneMat = new THREE.MeshStandardMaterial({ color: 0x121212, roughness: 0.15, metalness: 0.1 });
+            const dialPlateMat = new THREE.MeshStandardMaterial({ color: 0xefdfbc, roughness: 0.5 }); // vintage off-white dial plate
+
+            // Phone base
+            const phoneBaseGeo = new THREE.CylinderGeometry(0.12, 0.16, 0.1, 16);
+            const phoneBaseMesh = new THREE.Mesh(phoneBaseGeo, phoneMat);
+            phoneBaseMesh.position.y = 0.05;
+            phoneBaseMesh.castShadow = true;
+            phoneBaseMesh.receiveShadow = true;
+            phoneGroup.add(phoneBaseMesh);
+
+            // Dial plate (slanted forward)
+            const dialGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.01, 24);
+            const dialMesh = new THREE.Mesh(dialGeo, dialPlateMat);
+            dialMesh.rotation.x = Math.PI / 6;
+            dialMesh.position.set(0, 0.06, 0.08);
+            dialMesh.castShadow = true;
+            phoneGroup.add(dialMesh);
+
+            // Center dial spinner
+            const dialCenterGeo = new THREE.CylinderGeometry(0.02, 0.02, 0.012, 16);
+            const dialCenter = new THREE.Mesh(dialCenterGeo, phoneMat);
+            dialCenter.rotation.x = Math.PI / 6;
+            dialCenter.position.set(0, 0.063, 0.083);
+            phoneGroup.add(dialCenter);
+
+            // Cradle prongs
+            const forkGeo = new THREE.BoxGeometry(0.02, 0.05, 0.08);
+            const forkLeft = new THREE.Mesh(forkGeo, phoneMat);
+            forkLeft.position.set(-0.06, 0.11, 0);
+            phoneGroup.add(forkLeft);
+
+            const forkRight = new THREE.Mesh(forkGeo, phoneMat);
+            forkRight.position.set(0.06, 0.11, 0);
+            phoneGroup.add(forkRight);
+
+            // Handset
+            const handsetGroup = new THREE.Group();
+            handsetGroup.position.set(0, 0.13, 0);
+            handsetGroup.rotation.y = 0.1;
+            phoneGroup.add(handsetGroup);
+
+            // Handset handle bar
+            const handleBarGeo = new THREE.CylinderGeometry(0.016, 0.016, 0.26, 8);
+            handleBarGeo.rotateZ(Math.PI / 2);
+            const handleBar = new THREE.Mesh(handleBarGeo, phoneMat);
+            handleBar.castShadow = true;
+            handsetGroup.add(handleBar);
+
+            // Earpiece
+            const leftCupGeo = new THREE.CylinderGeometry(0.045, 0.03, 0.04, 12);
+            leftCupGeo.rotateZ(Math.PI / 2);
+            const leftCup = new THREE.Mesh(leftCupGeo, phoneMat);
+            leftCup.position.set(-0.13, 0, 0);
+            leftCup.castShadow = true;
+            handsetGroup.add(leftCup);
+
+            // Mouthpiece
+            const rightCupGeo = new THREE.CylinderGeometry(0.045, 0.03, 0.04, 12);
+            rightCupGeo.rotateZ(-Math.PI / 2);
+            const rightCup = new THREE.Mesh(rightCupGeo, phoneMat);
+            rightCup.position.set(0.13, 0, 0);
+            rightCup.castShadow = true;
+            handsetGroup.add(rightCup);
+
+            deskLight = null; // Desk light removed
+
+            // 5. Desk Steaming Mug
+            const mugGeo = new THREE.CylinderGeometry(0.06, 0.06, 0.14, 16);
+            const mugMat = new THREE.MeshStandardMaterial({ color: 0x1f1f1f, roughness: 0.5 });
+            const mug = new THREE.Mesh(mugGeo, mugMat);
+            mug.position.set(-0.7, 0.675 + 0.07, -0.8);
+            mug.castShadow = true;
+            scene.add(mug);
+
+            const handleGeo2 = new THREE.TorusGeometry(0.04, 0.01, 8, 16);
+            const handle2 = new THREE.Mesh(handleGeo2, mugMat);
+            handle2.position.set(-0.7 - 0.06, 0.675 + 0.07, -0.8);
+            handle2.rotation.y = Math.PI / 2;
+            scene.add(handle2);
+
+            const steamCount = 15;
+            const steamGeo = new THREE.BufferGeometry();
+            const steamPositions = new Float32Array(steamCount * 3);
+            for (let s = 0; s < steamCount * 3; s += 3) {
+                steamPositions[s] = -0.7 + (Math.random() - 0.5) * 0.06;
+                steamPositions[s + 1] = 0.675 + 0.16 + Math.random() * 0.4;
+                steamPositions[s + 2] = -0.8 + (Math.random() - 0.5) * 0.06;
+            }
+            steamGeo.setAttribute('position', new THREE.BufferAttribute(steamPositions, 3));
+            
+            const steamCanvas = document.createElement('canvas');
+            steamCanvas.width = 16;
+            steamCanvas.height = 16;
+            const steamCtx = steamCanvas.getContext('2d');
+            const steamGrad = steamCtx.createRadialGradient(8, 8, 0, 8, 8, 8);
+            steamGrad.addColorStop(0, 'rgba(255, 255, 255, 0.25)');
+            steamGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+            steamCtx.fillStyle = steamGrad;
+            steamCtx.fillRect(0, 0, 16, 16);
+            const steamTex = new THREE.CanvasTexture(steamCanvas);
+
+            const steamMat2 = new THREE.PointsMaterial({
+                size: 0.08,
+                map: steamTex,
+                transparent: true,
+                blending: THREE.AdditiveBlending,
+                opacity: 0.3,
+                depthWrite: false
+            });
+             steamSystem = new THREE.Points(steamGeo, steamMat2);
+             scene.add(steamSystem);
+ 
+             // 6. Retro Desk Fan (blades rotate and cast noir shadows)
+             const fanGroup = new THREE.Group();
+             fanGroup.position.set(0.9, 0.675, -0.8);
+             
+             const fanBase = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.02, 16), new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.6 }));
+             fanBase.castShadow = true;
+             fanGroup.add(fanBase);
+             
+             const fanNeck = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.2, 8), new THREE.MeshStandardMaterial({ color: 0xcd9a3f, metalness: 0.8 }));
+             fanNeck.position.set(0, 0.1, 0);
+             fanNeck.castShadow = true;
+             fanGroup.add(fanNeck);
+             
+             const fanMotor = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.1, 12), new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.5 }));
+             fanMotor.rotation.x = Math.PI / 2;
+             fanMotor.position.set(0, 0.2, 0.02);
+             fanMotor.castShadow = true;
+             fanGroup.add(fanMotor);
+             
+             const bladeGroup = new THREE.Group();
+             bladeGroup.position.set(0, 0.2, 0.08);
+             
+             const bladeHub = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.02, 12), new THREE.MeshStandardMaterial({ color: 0xcd9a3f, metalness: 0.8 }));
+             bladeHub.rotation.x = Math.PI / 2;
+             bladeGroup.add(bladeHub);
+             
+             const bladeMat = new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.5, roughness: 0.7, side: THREE.DoubleSide });
+             for(let b = 0; b < 3; b++) {
+                 const bladeGeo = new THREE.BoxGeometry(0.04, 0.18, 0.005);
+                 bladeGeo.rotateZ(b * Math.PI * 2 / 3);
+                 const blade = new THREE.Mesh(bladeGeo, bladeMat);
+                 blade.position.set(0, 0, 0.003);
+                 blade.castShadow = true;
+                 bladeGroup.add(blade);
+             }
+             fanGroup.add(bladeGroup);
+             scene.add(fanGroup);
+             bladeGroup.name = "fan_blades";
+             // 6. Desk scattered folders & papers
+            const paperGeo = new THREE.PlaneGeometry(0.35, 0.5);
+            const paperMat = new THREE.MeshStandardMaterial({ color: 0xefdfbc, roughness: 0.95 });
+            
+            const paper1 = new THREE.Mesh(paperGeo, paperMat);
+            paper1.rotation.x = -Math.PI / 2;
+            paper1.rotation.z = 0.3;
+            paper1.position.set(0.7, 0.675 + 0.002, -1.3);
+            paper1.receiveShadow = true;
+            scene.add(paper1);
+
+            const paper2 = new THREE.Mesh(paperGeo, paperMat);
+            paper2.rotation.x = -Math.PI / 2;
+            paper2.rotation.z = -0.4;
+            paper2.position.set(-0.9, 0.675 + 0.002, -1.4);
+            paper2.receiveShadow = true;
+            scene.add(paper2);
+
+            // 9. Desk Address Book removed
+
+            // 7. Filing Cabinet against Left Wall (top drawer slides out)
+            const cabinetGroup = new THREE.Group();
+            cabinetGroup.position.set(-4.5, 0.6, 3.5);
+            scene.add(cabinetGroup);
+
+            const cabinetBodyGeo = new THREE.BoxGeometry(0.8, 1.6, 0.8);
+            const cabinetBodyMat = new THREE.MeshStandardMaterial({ color: 0x2b2b2b, roughness: 0.6, metalness: 0.8 });
+            const cabinetBody = new THREE.Mesh(cabinetBodyGeo, cabinetBodyMat);
+            cabinetBody.castShadow = true;
+            cabinetBody.receiveShadow = true;
+            cabinetGroup.add(cabinetBody);
+
+            const handleMat = new THREE.MeshStandardMaterial({ color: 0xcd7f32, roughness: 0.3 });
+
+            // Bottom drawer (static)
+            const bDrawerGeo = new THREE.BoxGeometry(0.78, 0.72, 0.76);
+            const bDrawer = new THREE.Mesh(bDrawerGeo, cabinetBodyMat);
+            bDrawer.position.set(0.02, -0.36, 0);
+            cabinetGroup.add(bDrawer);
+
+            const bHandle = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.15, 8), handleMat);
+            bHandle.rotation.z = Math.PI / 2;
+            bHandle.position.set(0.4, 0, 0);
+            bDrawer.add(bHandle);
+
+            // Top drawer (interactive)
+            const tDrawerGeo = new THREE.BoxGeometry(0.78, 0.72, 0.76);
+            const tDrawer = new THREE.Mesh(tDrawerGeo, cabinetBodyMat);
+            tDrawer.position.set(0.02, 0.36, 0);
+            tDrawer.name = "cabinet_drawer";
+            tDrawer.userData = { isOpen: false, originalX: 0.02 };
+            cabinetGroup.add(tDrawer);
+            interactiveObjects.push(tDrawer);
+
+            const tHandle = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.15, 8), handleMat);
+            tHandle.rotation.z = Math.PI / 2;
+            tHandle.position.set(0.4, 0, 0);
+            tDrawer.add(tHandle);
+
+            // 8. Ceiling conduits & pipes
+            const pipeGeo1 = new THREE.CylinderGeometry(0.04, 0.04, 10, 8);
+            pipeGeo1.rotateZ(Math.PI / 2);
+            const pipeMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.7, metalness: 0.9 });
+            const pipe1 = new THREE.Mesh(pipeGeo1, pipeMat);
+            pipe1.position.set(0, 4.6, 2.0);
+            scene.add(pipe1);
+
+            const pipeGeo2 = new THREE.CylinderGeometry(0.03, 0.03, 20, 8);
+            pipeGeo2.rotateX(Math.PI / 2);
+            const pipe2 = new THREE.Mesh(pipeGeo2, pipeMat);
+            pipe2.position.set(-3.0, 4.65, 0.0);
+            scene.add(pipe2);
+
+            // ==========================================
+            // EVIDENCE CARDS (Dhanush Siddilingam Portfolio Structure)
+            // ==========================================
+            const cardData = [
+                { id: "profile", x: -1.7, y: 0.6, title: "CORE INTEL" },
+                { id: "project1", x: -1.8, y: -0.5, title: "AI MEMORY SDK" },
+                { id: "saas", x: 0.0, y: 0.7, title: "SAAS VENTURES" },
+                { id: "skills", x: 0.1, y: -0.4, title: "CAPABILITIES" },
+                { id: "experience", x: 1.7, y: 0.6, title: "FIELD RECORDS" },
+                { id: "education", x: 1.8, y: -0.5, title: "ACADEMIC FILE" }
+            ];
+
+            const cardGeo = new THREE.PlaneGeometry(1.2, 0.85);
+
+            cardData.forEach((data, index) => {
+                const cardCanvas = document.createElement('canvas');
+                cardCanvas.width = 256;
+                cardCanvas.height = 180;
+                const cCtx = cardCanvas.getContext('2d');
+
+                cCtx.fillStyle = '#efdfbc';
+                cCtx.fillRect(0, 0, 256, 180);
+
+                cCtx.strokeStyle = 'rgba(138, 37, 37, 0.2)';
+                cCtx.lineWidth = 4;
+                cCtx.strokeRect(6, 6, 244, 168);
+
+                cCtx.font = 'bold 14px Courier Prime, monospace';
+                cCtx.fillStyle = '#111';
+                cCtx.fillText(data.title, 16, 32);
+
+                cCtx.font = '10px Courier Prime, monospace';
+                cCtx.fillStyle = '#444';
+                cCtx.fillText("REF: CLASSIFIED-SEC-0" + (index+1), 16, 52);
+
+                // Draw fingerprint target graphic
+                cCtx.strokeStyle = '#8a2525';
+                cCtx.lineWidth = 1;
+                cCtx.beginPath();
+                cCtx.arc(200, 130, 25, 0, Math.PI * 2);
+                cCtx.stroke();
+                cCtx.beginPath();
+                cCtx.arc(200, 130, 15, 0, Math.PI * 2);
+                cCtx.stroke();
+
+                cCtx.fillStyle = '#8a2525';
+                cCtx.font = '10px Special Elite, serif';
+                cCtx.fillText("INVESTIGATE", 16, 155);
+
+                const cardTex = new THREE.CanvasTexture(cardCanvas);
+                const cardMat = new THREE.MeshStandardMaterial({
+                    map: cardTex,
+                    roughness: 0.9,
+                    metalness: 0.05
+                });
+
+                const cardMesh = new THREE.Mesh(cardGeo, cardMat);
+                cardMesh.position.set(data.x, data.y, 0.04);
+                corkboardMesh.add(cardMesh);
+
+                cardMesh.name = "card_" + data.id;
+                cardMesh.userData = { id: data.id, originalY: data.y };
+                interactiveObjects.push(cardMesh);
+
+                // Red Pin
+                const pinGeo = new THREE.CylinderGeometry(0.008, 0.008, 0.08, 8);
+                const pinMat = new THREE.MeshStandardMaterial({ color: 0xff0000, metalness: 0.9, roughness: 0.1 });
+                const pin = new THREE.Mesh(pinGeo, pinMat);
+                pin.rotation.x = Math.PI / 2;
+                pin.position.set(data.x, data.y + 0.44, 0.06);
+                corkboardMesh.add(pin);
+            });
+
+            buildEvidenceThreads();
+        }
+
+        function buildEvidenceThreads() {
+            const nodes = {
+                profile: new THREE.Vector3(-1.7, 0.6, -4.84),
+                project1: new THREE.Vector3(-1.8, -0.5, -4.84),
+                saas: new THREE.Vector3(0.0, 0.7, -4.84),
+                skills: new THREE.Vector3(0.1, -0.4, -4.84),
+                experience: new THREE.Vector3(1.7, 0.6, -4.84),
+                education: new THREE.Vector3(1.8, -0.5, -4.84)
+            };
+
+            const connections = [
+                [nodes.profile, nodes.project1],
+                [nodes.profile, nodes.saas],
+                [nodes.saas, nodes.skills],
+                [nodes.saas, nodes.experience],
+                [nodes.skills, nodes.education],
+                [nodes.experience, nodes.education],
+                [nodes.project1, nodes.skills]
+            ];
+
+            const threadMat = new THREE.LineBasicMaterial({
+                color: 0x8a2525,
+                linewidth: 2
+            });
+
+            connections.forEach(conn => {
+                const points = [];
+                const mid = new THREE.Vector3().addVectors(conn[0], conn[1]).multiplyScalar(0.5);
+                mid.y -= 0.12;
+                mid.z += 0.02;
+                
+                points.push(conn[0]);
+                points.push(mid);
+                points.push(conn[1]);
+
+                const curve = new THREE.CatmullRomCurve3(points);
+                const curvePoints = curve.getPoints(20);
+                const geometry = new THREE.BufferGeometry().setFromPoints(curvePoints);
+                
+                const line = new THREE.Line(geometry, threadMat);
+                scene.add(line);
+                threadLines.push(line);
+            });
+        }
+
+        // ==========================================
+        // 4. GPU PARTICLE SYSTEM (Dust Particles)
+        // ==========================================
+        function buildDustSystem() {
+            const count = 250;
+            const geo = new THREE.BufferGeometry();
+            const posArray = new Float32Array(count * 3);
+
+            for (let i = 0; i < count * 3; i += 3) {
+                posArray[i] = (Math.random() - 0.5) * 8;
+                posArray[i + 1] = Math.random() * 3;
+                posArray[i + 2] = (Math.random() - 0.5) * 10 - 1;
+            }
+
+            geo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+
+            const pCanvas = document.createElement('canvas');
+            pCanvas.width = 16;
+            pCanvas.height = 16;
+            const pCtx = pCanvas.getContext('2d');
+            const grad = pCtx.createRadialGradient(8, 8, 0, 8, 8, 8);
+            grad.addColorStop(0, 'rgba(255, 255, 255, 1)');
+            grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+            pCtx.fillStyle = grad;
+            pCtx.fillRect(0, 0, 16, 16);
+            const pTex = new THREE.CanvasTexture(pCanvas);
+
+            const mat = new THREE.PointsMaterial({
+                size: 0.022,
+                map: pTex,
+                color: 0xffe6b0, // Warm golden-tungsten tint matching the noir lighting
+                transparent: true,
+                blending: THREE.AdditiveBlending,
+                opacity: 0.07,
+                depthWrite: false
+            });
+
+            particlesSystem = new THREE.Points(geo, mat);
+            scene.add(particlesSystem);
+        }
+
+        function animateParticles(time) {
+            if (!particlesSystem) return;
+            const pos = particlesSystem.geometry.attributes.position.array;
+            
+            for (let i = 0; i < pos.length; i += 3) {
+                // Continuous drift accumulation
+                pos[i] += 0.0015 + Math.sin(time * 0.001 + i) * 0.0005; 
+                pos[i + 1] += 0.001 + Math.cos(time * 0.0008 + i) * 0.0003; 
+                pos[i + 2] += 0.001 + Math.sin(time * 0.0005 + i) * 0.0005;
+
+                // Wrap around room boundaries
+                if (pos[i] > 4) pos[i] = -4;
+                if (pos[i] < -4) pos[i] = 4;
+                if (pos[i + 1] > 3) pos[i + 1] = 0;
+                if (pos[i + 1] < 0) pos[i + 1] = 3;
+                if (pos[i + 2] > 4) pos[i + 2] = -6;
+                if (pos[i + 2] < -6) pos[i + 2] = 4;
+            }
+            particlesSystem.geometry.attributes.position.needsUpdate = true;
+        }
+
+        function animateSteam(time) {
+            if (!steamSystem) return;
+            const pos = steamSystem.geometry.attributes.position.array;
+            for (let i = 0; i < pos.length; i += 3) {
+                pos[i + 1] += 0.0018;
+                pos[i] += Math.sin(time * 0.005 + i) * 0.0006;
+                pos[i + 2] += Math.cos(time * 0.004 + i) * 0.0006;
+
+                if (pos[i + 1] > 0.675 + 0.5) {
+                    pos[i] = -0.7 + (Math.random() - 0.5) * 0.06;
+                    pos[i + 1] = 0.675 + 0.16;
+                    pos[i + 2] = -0.8 + (Math.random() - 0.5) * 0.06;
+                }
+            }
+            steamSystem.geometry.attributes.position.needsUpdate = true;
+        }
+
+        // ==========================================
+        // 5. INTERACTIVE TIMELINES & SCROLLYTELLING
+        // ==========================================
+        function triggerFlickerSequence() {
+            if (isLightOn) return;
+            isLightOn = true;
+
+            // Automatically turn on audio and start crickets + light flicker sounds
+            soundOn = true;
+            audioBtn.textContent = "Sound: On";
+
+            const bgAudio = document.getElementById('room-ambient-audio');
+            if (bgAudio) {
+                bgAudio.play().catch(e => console.log("Audio playback blocked."));
+            }
+
+            const humAudio = document.getElementById('neon-hum-audio');
+            const flickerAudio = document.getElementById('light-flicker-audio');
+            if (flickerAudio) {
+                flickerAudio.volume = 0.9;
+                flickerAudio.play().catch(e => console.log("Flicker audio blocked."));
+            }
+
+            gsap.to(lightSwitchMesh.rotation, { z: 0.8, duration: 0.15 });
+
+            const timeline = gsap.timeline({
+                onComplete: () => {
+                    pointLight.intensity = 2.5;
+                    if (deskLight) deskLight.intensity = 1.0;
+                    ambientLight.color.setHex(0xffb000);
+                    ambientLight.intensity = 0.22; // Brighter ambient fill for full-room illumination
+                    scene.background.setHex(0x16130d);
+                    
+                    updateHUD(4, "INVESTIGATION ACTIVE", "Select pinned dossiers on the wall boards.");
+                    gsap.to("#flashlight-overlay", { opacity: 0.85, duration: 1.0 });
+
+                    const bulb = scene.getObjectByName("bulb_geo");
+                    if (bulb) bulb.material.color.setHex(0xffea00);
+
+                    // Fade in neon hum
+                    if (humAudio && soundOn) {
+                        humAudio.volume = 0.0;
+                        humAudio.play().catch(() => {});
+                        gsap.to(humAudio, { volume: 0.25, duration: 2.0 });
+                    }
+                }
+            });
+
+            const flashVal = [1.2, 0.1, 2.5, 0.0, 1.8, 0.2, 3.0, 0.1, 2.8, 0.5, 3.2, 0.0];
+            flashVal.forEach((val) => {
+                timeline.to(pointLight, {
+                    intensity: val * 1.2,
+                    duration: 0.05 + Math.random() * 0.08,
+                    ease: "power1.inOut"
+                });
+                if (deskLight) {
+                    timeline.to(deskLight, {
+                        intensity: val * 0.4,
+                        duration: 0.05 + Math.random() * 0.08,
+                        ease: "power1.inOut"
+                    }, "<");
+                }
+            });
+        }
+
+        let textTyped = false;
+        function typeMonitorInfo() {
+            if (textTyped) return;
+            textTyped = true;
+
+            const ctx = monitorMesh.userData.ctx;
+            const texture = monitorMesh.userData.texture;
+            
+            let lines = [
+                "> BOOT PROCESS INITIATED...",
+                "> TARGET: DHANUSH SIDDILINGAM",
+                "> PROFILE: AI & SAAS ARCHITECT",
+                "> CORE SYSTEMS: 5 SaaS PLATS",
+                "> INITIATING INVESTIGATION MODE...",
+            ];
+
+            let curLine = 0;
+            let charIndex = 0;
+            let currentText = ["", "", "", "", ""];
+            let scanAngle = 0;
+
+            function drawCRTScanlines() {
+                ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+                ctx.lineWidth = 1.5;
+                for (let y = 0; y < 312; y += 4) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, y);
+                    ctx.lineTo(512, y);
+                    ctx.stroke();
+                }
+                
+                const grad = ctx.createRadialGradient(256, 156, 130, 256, 156, 260);
+                grad.addColorStop(0, 'rgba(0, 229, 255, 0.0)');
+                grad.addColorStop(1, 'rgba(0, 0, 0, 0.45)');
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, 512, 312);
+            }
+
+            function drawRadar(angle) {
+                ctx.strokeStyle = '#00e5ff';
+                ctx.lineWidth = 1;
+                
+                // Outer ring
+                ctx.beginPath();
+                ctx.arc(420, 100, 45, 0, Math.PI*2);
+                ctx.stroke();
+
+                // Inner crosshair
+                ctx.beginPath();
+                ctx.moveTo(375, 100);
+                ctx.lineTo(465, 100);
+                ctx.moveTo(420, 55);
+                ctx.lineTo(420, 145);
+                ctx.stroke();
+
+                // Scanning line
+                ctx.strokeStyle = 'rgba(0, 229, 255, 0.4)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(420, 100);
+                ctx.lineTo(420 + Math.cos(angle) * 45, 100 + Math.sin(angle) * 45);
+                ctx.stroke();
+
+                ctx.fillStyle = '#00e5ff';
+                ctx.font = '10px Courier Prime, monospace';
+                ctx.fillText("BIOMETRIC SCAN", 375, 175);
+            }
+
+            function typeNext() {
+                if (curLine < lines.length) {
+                    if (charIndex < lines[curLine].length) {
+                        currentText[curLine] += lines[curLine].charAt(charIndex);
+                        charIndex++;
+
+                        // Play realistic typing click sound
+                        if (soundOn) {
+                            const clickSound = new Audio("https://assets.mixkit.co/active_storage/sfx/2475/2475-preview.mp3");
+                            clickSound.volume = 0.08;
+                            clickSound.play().catch(() => {});
+                        }
+                    } else {
+                        curLine++;
+                        charIndex = 0;
+                    }
+                }
+
+                ctx.fillStyle = '#000000';
+                ctx.fillRect(0, 0, 512, 312);
+
+                scanAngle += 0.15;
+                drawRadar(scanAngle);
+
+                ctx.font = '16px Courier Prime, monospace';
+                ctx.fillStyle = '#00e5ff';
+                for(let l = 0; l <= Math.min(curLine, lines.length - 1); l++) {
+                    ctx.fillText(currentText[l], 25, 45 + (l * 40));
+                }
+
+                // Draw glowing contact button
+                ctx.fillStyle = 'rgba(0, 229, 255, 0.1)';
+                ctx.fillRect(25, 230, 210, 36);
+                ctx.strokeStyle = '#00e5ff';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(25, 230, 210, 36);
+                
+                ctx.font = 'bold 12px Courier Prime, monospace';
+                ctx.fillStyle = '#00e5ff';
+                ctx.fillText("[ CONTACT DHANUSH ]", 45, 253);
+
+                drawCRTScanlines();
+                texture.needsUpdate = true;
+
+                if (curLine < lines.length || charIndex > 0) {
+                    setTimeout(typeNext, 25);
+                } else {
+                    // Continuous scanner loop
+                    function animateScreenOnly() {
+                        ctx.fillStyle = '#000000';
+                        ctx.fillRect(0, 0, 512, 312);
+                        
+                        scanAngle += 0.05;
+                        drawRadar(scanAngle);
+
+                        ctx.font = '16px Courier Prime, monospace';
+                        ctx.fillStyle = '#00e5ff';
+                        for(let l = 0; l < lines.length; l++) {
+                            ctx.fillText(lines[l], 25, 45 + (l * 40));
+                        }
+                        
+                        // Draw glowing contact button
+                        ctx.fillStyle = 'rgba(0, 229, 255, 0.1)';
+                        ctx.fillRect(25, 230, 210, 36);
+                        ctx.strokeStyle = '#00e5ff';
+                        ctx.lineWidth = 2;
+                        ctx.strokeRect(25, 230, 210, 36);
+                        
+                        ctx.font = 'bold 12px Courier Prime, monospace';
+                        ctx.fillStyle = '#00e5ff';
+                        ctx.fillText("[ CONTACT DHANUSH ]", 45, 253);
+
+                        drawCRTScanlines();
+                        texture.needsUpdate = true;
+                        requestAnimationFrame(animateScreenOnly);
+                    }
+                    animateScreenOnly();
+                }
+            }
+
+            typeNext();
+        }
+
+        function updateSoundVolumes(progress) {
+            if (!soundOn) return;
+            const bgAudio = document.getElementById('room-ambient-audio');
+            const humAudio = document.getElementById('neon-hum-audio');
+            
+            if (bgAudio) {
+                // Dim crickets as the camera moves deeper inside
+                bgAudio.volume = Math.max(0.18, 0.7 - progress * 0.55);
+            }
+            if (humAudio && isLightOn) {
+                // Max hum focus at the monitor screen Act range
+                humAudio.volume = Math.min(0.25, progress * 0.25);
+            }
+        }
+
+        function updateScrollTransition(progress) {
+            updateSoundVolumes(progress);
+            if (progress < 0.6) {
+                cameraGroup.position.z = 12 - (progress / 0.6) * 10;
+                cameraGroup.position.y = 1.8 - (progress / 0.6) * 0.2;
+                cameraGroup.lookAt(0, 1.4, -4.5);
+                currentAct = 1;
+                updateHUD(1, "THE VOID", "Scroll down to penetrate the workspace...");
+            } 
+            else if (progress >= 0.6 && progress < 0.8) {
+                const deskProgress = (progress - 0.6) / 0.2;
+                cameraGroup.position.z = 2.0 - deskProgress * 0.8;
+                cameraGroup.position.y = 1.6 - deskProgress * 0.2;
+                cameraGroup.lookAt(0, 1.4, -4.5);
+                
+                typeMonitorInfo();
+
+                if (!isLightOn) {
+                    currentAct = 3;
+                    updateHUD(3, "POWER FAILURE", "Click the physical switch to the left of the board to boot the lights.");
+                } else {
+                    currentAct = 4;
+                    updateHUD(4, "INVESTIGATION ACTIVE", "Inspect the pinned dossiers.");
+                }
+            } 
+            else {
+                // Phase 3 -> Zoom past the monitor screen directly onto the board
+                const zoomProgress = (progress - 0.8) / 0.2;
+                
+                // Lock the zoom in at a specific point (clamp zoomProgress to 1.0)
+                const targetZoom = Math.min(zoomProgress, 1.0);
+                
+                // Dolly path: smooth quadratic curve that rises over the monitor (z: -0.6) and settles in front of the board (z: -4.9)
+                // Z goes from 1.2 down to -1.8 (stopping 3.1 units away from the board for perfect framing)
+                cameraGroup.position.z = 1.2 - targetZoom * 3.0; 
+                
+                // Y rises from 1.4 to 2.16 (at targetZoom=0.5, clearing monitor top) and settles at 2.0 (corkboard center height)
+                cameraGroup.position.y = 1.4 + 2.45 * targetZoom - 1.85 * targetZoom * targetZoom;
+                
+                cameraGroup.lookAt(0, 1.8, -4.9);
+
+                currentAct = 5;
+                
+                if (zoomProgress > 0.9) {
+                    if (isLightOn) {
+                        pointLight.color.setHex(0xffb000);
+                        threadLines.forEach(l => l.material.color.setHex(0x8a2525));
+                    }
+                    updateHUD(5, "CONVERGENCE", "Case complete. Contact details available in secure folder.");
+                } else {
+                    if (isLightOn) {
+                        pointLight.color.setHex(0xffb000);
+                        threadLines.forEach(l => l.material.color.setHex(0x8a2525));
+                        updateHUD(4, "INVESTIGATION ACTIVE", "Zoomed into evidence board.");
+                    }
+                }
+            }
+        }
+
+        // ==========================================
+        // 6. UI OVERLAYS & DOSSIER HANDLERS
+        // ==========================================
+        function updateHUD(actNum, title, subtitle) {
+            document.getElementById('hud-bottom-right').textContent = "ACT " + actNum + ": " + title;
+            document.getElementById('act-title').textContent = title;
+            document.getElementById('act-subtitle').textContent = subtitle;
+            
+            if (actNum === 3 && !isLightOn) {
+                document.getElementById('act-title').style.color = 'var(--primary-amber)';
+            } else if (actNum === 5) {
+                document.getElementById('act-title').style.color = 'var(--primary-blue)';
+            } else {
+                document.getElementById('act-title').style.color = 'rgba(255,255,255,0.9)';
+            }
+        }
+
+        function openDossier(id) {
+            const data = PORTFOLIO_DATA[id];
+            if (!data) return;
+
+            // Play physical manila folder flip sound
+            if (soundOn) {
+                const paperSound = new Audio("https://assets.mixkit.co/active_storage/sfx/1787/1787-preview.mp3");
+                paperSound.volume = 0.45;
+                paperSound.play().catch(() => {});
+            }
+
+            document.getElementById('dossier-tab-title').textContent = data.title;
+            document.getElementById('dossier-stamp').textContent = data.stamp;
+            document.getElementById('dossier-target-content').innerHTML = data.html;
+
+            document.getElementById('dossier-drawer').classList.add('active');
+            
+            // Disable background scrolling to allow drawer scroll independence
+            document.body.style.overflow = 'hidden';
+        }
+
+        document.getElementById('dossier-close').addEventListener('click', (e) => {
+            e.stopPropagation();
+            document.getElementById('dossier-drawer').classList.remove('active');
+            // Re-enable background page scrolling
+            document.body.style.overflow = '';
+        });
+
+        document.getElementById('dossier-drawer').addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+
+        // ==========================================
+        // 7. INPUT HANDLERS
+        // ==========================================
+        function onDocumentClick(event) {
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(interactiveObjects, true);
+
+            if (intersects.length > 0) {
+                const target = intersects[0].object;
+                
+                if (target.name === "light_switch") {
+                    triggerFlickerSequence();
+                }
+
+                if (target.name === "cabinet_drawer") {
+                     const isOpen = target.userData.isOpen;
+                     const targetX = isOpen ? target.userData.originalX : target.userData.originalX + 0.45;
+                     
+                     // Play metal drawer slide sound
+                     if (soundOn) {
+                         const slideSound = new Audio("https://assets.mixkit.co/active_storage/sfx/1778/1778-preview.mp3");
+                         slideSound.volume = 0.4;
+                         slideSound.play().catch(() => {});
+                     }
+
+                     gsap.to(target.position, {
+                         x: targetX,
+                         duration: 0.8,
+                         ease: "power2.inOut",
+                         onComplete: () => {
+                             target.userData.isOpen = !isOpen;
+                             if (!isOpen) {
+                                 openDossier('easter_egg');
+                             }
+                         }
+                     });
+                 }
+
+                  if (target.name === "computer_monitor") {
+                      openDossier('contacts');
+                  }
+
+                if (isLightOn && target.name.startsWith("card_")) {
+                    openDossier(target.userData.id);
+                }
+            }
+        }
+
+        let mouseX = 0, mouseY = 0;
+        window.addEventListener('mousemove', (e) => {
+            mouseX = (e.clientX / window.innerWidth) * 2 - 1;
+            mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
+            
+            document.documentElement.style.setProperty('--mouse-x', e.clientX + 'px');
+            document.documentElement.style.setProperty('--mouse-y', e.clientY + 'px');
+        });
+
+        function tick(time) {
+            requestAnimationFrame(tick);
+            animateParticles(time);
+            animateSteam(time);
+
+            // Spin desk fan blades
+            const blades = scene.getObjectByName("fan_blades");
+            if (blades) {
+                blades.rotation.z += 0.08;
+            }
+
+            // Cinematic handheld breathing operator camera sway + mouse tracking
+            if (camera) {
+                gsap.to(camera.rotation, {
+                    y: Math.PI - mouseX * 0.05 + Math.sin(time * 0.001) * 0.012,
+                    x: mouseY * 0.03 + Math.cos(time * 0.0012) * 0.008,
+                    duration: 0.5,
+                    overwrite: "auto",
+                    ease: "power1.out"
+                });
+            }
+
+            if (isLightOn) {
+                const swayX = Math.sin(time * 0.001) * 0.2;
+                const swayZ = Math.cos(time * 0.0014) * 0.12;
+                pointLight.position.set(swayX, 2.5, 0.2 + swayZ);
+                const bulb = scene.getObjectByName("bulb_geo");
+                if (bulb) bulb.position.copy(pointLight.position);
+            }
+
+            if (monitorMesh) {
+                const intensity = 0.5 + Math.sin(time * 0.003) * 0.15;
+                monitorLight.intensity = intensity;
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        // Audio Handler
+        const audioBtn = document.getElementById('audio-toggle');
+        const bgAudio = document.getElementById('room-ambient-audio');
+        const humAudio = document.getElementById('neon-hum-audio');
+        const flickerAudio = document.getElementById('light-flicker-audio');
+        let soundOn = true;
+
+        audioBtn.addEventListener('click', () => {
+            soundOn = !soundOn;
+            if (soundOn) {
+                bgAudio.play().catch(e => console.log("Audio playback blocked."));
+                if (isLightOn && humAudio) humAudio.play().catch(e => console.log("Hum audio blocked."));
+                audioBtn.textContent = "Sound: On";
+            } else {
+                bgAudio.pause();
+                if (humAudio) humAudio.pause();
+                if (flickerAudio) flickerAudio.pause();
+                audioBtn.textContent = "Sound: Off";
+            }
+        });
+
+        // Color Grading Handler
+        const gradeBtn = document.getElementById('grade-toggle');
+        const grades = ["cinematic", "noir", "vintage"];
+        let currentGradeIdx = 0;
+
+        gradeBtn.addEventListener('click', () => {
+            document.body.classList.remove("grade-noir", "grade-vintage");
+            currentGradeIdx = (currentGradeIdx + 1) % grades.length;
+            
+            const activeGrade = grades[currentGradeIdx];
+            if (activeGrade !== "cinematic") {
+                document.body.classList.add("grade-" + activeGrade);
+            }
+            gradeBtn.textContent = "GRADE: " + activeGrade.toUpperCase();
+            
+            // Retro mechanical clicking feel when toggled
+            if (soundOn) {
+                const switchClick = new Audio("https://assets.mixkit.co/active_storage/sfx/2568/2568-84.wav");
+                switchClick.volume = 0.3;
+                switchClick.play().catch(() => {});
+            }
+        });
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        window.onload = () => {
+            try {
+                // Prevent browser from restoring scroll position on refresh
+                if ('scrollRestoration' in history) {
+                    history.scrollRestoration = 'manual';
+                }
+                window.scrollTo(0, 0);
+                
+                initEngine();
+                
+                // Initialize camera at start position
+                updateScrollTransition(0);
+                
+                window.addEventListener('scroll', () => {
+                    const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+                    const scrollProgress = window.scrollY / (maxScroll || 1);
+                    updateScrollTransition(scrollProgress);
+                });
+
+                const lockScroll = (e) => {
+                    const dossierDrawer = document.getElementById('dossier-drawer');
+                    const dossierBody = document.getElementById('dossier-body');
+                    if (dossierDrawer && dossierDrawer.classList.contains('active')) {
+                        if (dossierBody && dossierBody.contains(e.target)) {
+                            return; // Allow scroll inside dossier body
+                        }
+                        e.preventDefault(); // Block background scroll
+                    }
+                };
+                window.addEventListener('wheel', lockScroll, { passive: false });
+                window.addEventListener('touchmove', lockScroll, { passive: false });
+
+                window.addEventListener('click', onDocumentClick);
+                requestAnimationFrame(tick);
+
+                // Entrance overlay click handler to initialize audio
+                const enterBtn = document.getElementById('enter-btn');
+                const welcomeOverlay = document.getElementById('welcome-overlay');
+                
+                // Add hover style effect to button
+                enterBtn.addEventListener('mouseenter', () => {
+                    enterBtn.style.background = '#ffb000';
+                    enterBtn.style.color = '#020202';
+                    enterBtn.style.boxShadow = '0 0 15px rgba(255, 176, 0, 0.6)';
+                });
+                enterBtn.addEventListener('mouseleave', () => {
+                    enterBtn.style.background = 'transparent';
+                    enterBtn.style.color = '#ffb000';
+                    enterBtn.style.boxShadow = 'none';
+                });
+
+                const startAudio = () => {
+                    if (soundOn && bgAudio) {
+                        bgAudio.play().then(() => {
+                            // Successfully started, fade welcome overlay out
+                            welcomeOverlay.style.opacity = 0;
+                            setTimeout(() => {
+                                welcomeOverlay.style.display = 'none';
+                            }, 800);
+                            
+                            // Remove backup listeners
+                            document.removeEventListener('click', startAudio);
+                            document.removeEventListener('keydown', startAudio);
+                            document.removeEventListener('scroll', startAudio);
+                            document.removeEventListener('mousemove', startAudio);
+                        }).catch(e => {
+                            console.log("Autoplay blocked, waiting for next user gesture...");
+                        });
+                    }
+                };
+
+                // Link overlay button to start audio
+                enterBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    startAudio();
+                });
+                
+                // Registers fallback listeners for user gestures to bypass standard browser autoplay policies
+                document.addEventListener('click', startAudio);
+                document.addEventListener('keydown', startAudio);
+                document.addEventListener('scroll', startAudio);
+                document.addEventListener('mousemove', startAudio);
+            } catch (err) {
+                document.getElementById('error-fallback').style.display = 'block';
+                document.getElementById('error-msg').textContent = err.stack || err.message;
+            }
+        };
+    </script>
+</body>
+</html>
