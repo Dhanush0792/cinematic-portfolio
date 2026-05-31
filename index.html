@@ -1040,6 +1040,98 @@
             mouseGroup.add(mouseMesh);
             scene.add(mouseGroup);
 
+            // ==========================================
+            // Sleek Mid-Century Modern Office Chair
+            // ==========================================
+            const chairGroup = new THREE.Group();
+            chairGroup.position.set(-0.2, 0, 0.6); // slightly offset to the left and placed in front of the desk
+            chairGroup.rotation.y = 0.35; // rotated slightly sideways (angled towards the desk/monitor)
+
+            const metalMat = new THREE.MeshStandardMaterial({ color: 0x777777, metalness: 0.85, roughness: 0.2 });
+            const leatherMat = new THREE.MeshStandardMaterial({ color: 0x1a120b, roughness: 0.65 }); // dark brown premium leather
+
+            // 1. Chair Base (5-star metal feet)
+            const feetGroup = new THREE.Group();
+            feetGroup.position.y = 0.05;
+            for (let i = 0; i < 5; i++) {
+                const angle = (i / 5) * Math.PI * 2;
+                const footGeo = new THREE.BoxGeometry(0.35, 0.025, 0.05);
+                const foot = new THREE.Mesh(footGeo, metalMat);
+                foot.position.set(Math.cos(angle) * 0.18, 0, Math.sin(angle) * 0.18);
+                foot.rotation.y = -angle;
+                foot.castShadow = true;
+                feetGroup.add(foot);
+
+                // Small black casters/wheels
+                const wheelGeo = new THREE.SphereGeometry(0.025, 8, 8);
+                const wheelMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
+                const wheel = new THREE.Mesh(wheelGeo, wheelMat);
+                wheel.position.set(Math.cos(angle) * 0.34, -0.015, Math.sin(angle) * 0.34);
+                feetGroup.add(wheel);
+            }
+            chairGroup.add(feetGroup);
+
+            // 2. Central Shaft
+            const shaftGeo = new THREE.CylinderGeometry(0.025, 0.025, 0.45, 12);
+            const shaft = new THREE.Mesh(shaftGeo, metalMat);
+            shaft.position.y = 0.275;
+            shaft.castShadow = true;
+            chairGroup.add(shaft);
+
+            // 3. Seat Cushion
+            const seatGeo = new THREE.BoxGeometry(0.5, 0.07, 0.5);
+            const seat = new THREE.Mesh(seatGeo, leatherMat);
+            seat.position.y = 0.52; // seat level sits comfortably below desk Y = 0.675
+            seat.castShadow = true;
+            seat.receiveShadow = true;
+            chairGroup.add(seat);
+
+            // 4. Backrest (leather pad tilted back)
+            const backrestGroup = new THREE.Group();
+            backrestGroup.position.set(0, 0.82, -0.22);
+            backrestGroup.rotation.x = -0.12; // tilted back
+
+            const backrestGeo = new THREE.BoxGeometry(0.46, 0.5, 0.07);
+            const backrest = new THREE.Mesh(backrestGeo, leatherMat);
+            backrest.castShadow = true;
+            backrestGroup.add(backrest);
+            chairGroup.add(backrestGroup);
+
+            // 5. Metal Backrest Support bar
+            const supportGeo = new THREE.BoxGeometry(0.05, 0.38, 0.025);
+            const support = new THREE.Mesh(supportGeo, metalMat);
+            support.position.set(0, 0.68, -0.2);
+            support.rotation.x = -0.08;
+            support.castShadow = true;
+            chairGroup.add(support);
+
+            // 6. Sleek Armrests
+            const armrestLGeo = new THREE.BoxGeometry(0.045, 0.035, 0.36);
+            const armrestL = new THREE.Mesh(armrestLGeo, leatherMat);
+            armrestL.position.set(-0.28, 0.66, 0.04);
+            armrestL.castShadow = true;
+            chairGroup.add(armrestL);
+
+            const armLSupportGeo = new THREE.CylinderGeometry(0.012, 0.012, 0.15, 8);
+            const armLSupport = new THREE.Mesh(armLSupportGeo, metalMat);
+            armLSupport.position.set(-0.28, 0.58, 0.04);
+            armLSupport.castShadow = true;
+            chairGroup.add(armLSupport);
+
+            const armrestRGeo = new THREE.BoxGeometry(0.045, 0.035, 0.36);
+            const armrestR = new THREE.Mesh(armrestRGeo, leatherMat);
+            armrestR.position.set(0.28, 0.66, 0.04);
+            armrestR.castShadow = true;
+            chairGroup.add(armrestR);
+
+            const armRSupportGeo = new THREE.CylinderGeometry(0.012, 0.012, 0.15, 8);
+            const armRSupport = new THREE.Mesh(armRSupportGeo, metalMat);
+            armRSupport.position.set(0.28, 0.58, 0.04);
+            armRSupport.castShadow = true;
+            chairGroup.add(armRSupport);
+
+            scene.add(chairGroup);
+
             // PHYSICAL LIGHT SWITCH (placed on the back wall next to the corkboard for visibility)
             const switchBoxGeo = new THREE.BoxGeometry(0.15, 0.22, 0.05);
             const switchBoxMat = new THREE.MeshStandardMaterial({ color: 0x2e2e2e, roughness: 0.5 });
