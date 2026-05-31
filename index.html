@@ -2092,13 +2092,20 @@
 
         function updateScrollTransition(progress) {
             updateSoundVolumes(progress);
-            if (progress < 0.6) {
+            if (progress < 0.3) {
                 cameraGroup.position.z = 12 - (progress / 0.6) * 10;
                 cameraGroup.position.y = 1.8 - (progress / 0.6) * 0.2;
                 cameraGroup.lookAt(0, 1.4, -4.5);
                 currentAct = 1;
                 updateHUD(1, "THE VOID", "Scroll down to penetrate the workspace...");
             } 
+            else if (progress >= 0.3 && progress < 0.6) {
+                cameraGroup.position.z = 12 - (progress / 0.6) * 10;
+                cameraGroup.position.y = 1.8 - (progress / 0.6) * 0.2;
+                cameraGroup.lookAt(0, 1.4, -4.5);
+                currentAct = 2;
+                updateHUD(2, "THE APPROACH", "Approaching the terminal workstation...");
+            }
             else if (progress >= 0.6 && progress < 0.8) {
                 const deskProgress = (progress - 0.6) / 0.2;
                 cameraGroup.position.z = 2.0 - deskProgress * 0.8;
