@@ -1093,9 +1093,9 @@
             const mapTex = new THREE.CanvasTexture(mapCanvas);
             const mapMat = new THREE.MeshStandardMaterial({ 
                 map: mapTex, 
-                roughness: 0.4,
-                emissive: 0x5a483a,
-                emissiveIntensity: 0.65
+                roughness: 0.45,
+                emissive: 0x8a705a,
+                emissiveIntensity: 0.85
             });
             const mapMesh = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 2.2), mapMat);
             mapMesh.position.set(-4.95, 2.0, -1.5);
@@ -1139,12 +1139,39 @@
 
             const mapImg = new Image();
             mapImg.onload = () => {
-                // Clear and draw map with increased contrast/brightness
+                // Clear canvas to beige background
                 mapCtx.fillStyle = '#efdfbc';
                 mapCtx.fillRect(0, 0, 512, 512);
-                mapCtx.filter = 'contrast(2.2) brightness(1.05)';
+                
+                // Draw outline map
                 mapCtx.drawImage(mapImg, 0, 0, 512, 512);
-                mapCtx.filter = 'none';
+
+                // Pixel-level contrast filter: convert faint lines to thick, bold dark outlines
+                const imgData = mapCtx.getImageData(0, 0, 512, 512);
+                const data = imgData.data;
+                for (let i = 0; i < data.length; i += 4) {
+                    let r = data[i];
+                    let g = data[i+1];
+                    let b = data[i+2];
+                    let brightness = (r + g + b) / 3;
+                    
+                    // Outlines are darker than background
+                    if (brightness < 242) {
+                        data[i] = 15;     // Deep dark brown/black outline
+                        data[i+1] = 8;
+                        data[i+2] = 4;
+                    } else {
+                        data[i] = 239;    // Beige paper color
+                        data[i+1] = 223;
+                        data[i+2] = 188;
+                    }
+                }
+                mapCtx.putImageData(imgData, 0, 0);
+
+                // Draw offset passes to thicken the lines slightly
+                mapCtx.globalCompositeOperation = 'source-over';
+                mapCtx.drawImage(mapCanvas, 0.5, 0.5);
+                mapCtx.drawImage(mapCanvas, -0.5, -0.5);
 
                 mapTex.needsUpdate = true;
             };
