@@ -485,7 +485,6 @@
                             <div class="dossier-field"><span class="dossier-label">SUBJECT:</span><span class="dossier-value">Dhanush Siddilingam</span></div>
                             <div class="dossier-field"><span class="dossier-label">ROLE:</span><span class="dossier-value">Full-Stack Developer | AI Developer | SaaS Builder</span></div>
                             <div class="dossier-field"><span class="dossier-label">CLEARANCE:</span><span class="dossier-value">Level 5 (AI Product Architect)</span></div>
-                            <div class="dossier-field"><span class="dossier-label">GRADUATION:</span><span class="dossier-value">June 2026 (SVCE ECE)</span></div>
                             
                             <h4 class="dossier-subheading">CORE MISSION</h4>
                             <p>Build AI-powered products, SaaS businesses, and scalable software systems that solve real-world problems.</p>
@@ -2023,7 +2022,9 @@
             }
 
             // Cinematic handheld breathing operator camera sway + mouse tracking
-            if (camera) {
+            const dossierDrawer = document.getElementById('dossier-drawer');
+            const isDossierOpen = dossierDrawer && dossierDrawer.classList.contains('active');
+            if (camera && !isDossierOpen) {
                 gsap.to(camera.rotation, {
                     y: Math.PI - mouseX * 0.05 + Math.sin(time * 0.001) * 0.012,
                     x: mouseY * 0.03 + Math.cos(time * 0.0012) * 0.008,
