@@ -1283,7 +1283,9 @@
             const photoMat = new THREE.MeshStandardMaterial({ 
                 map: photoTex, 
                 roughness: 0.25,
-                metalness: 0.1
+                metalness: 0.1,
+                emissive: 0x5a4d42, // Warm self-illuminating glow for clear visibility
+                emissiveIntensity: 0.85
             });
             const photoGeo = new THREE.PlaneGeometry(0.92, 1.62);
             const photoMesh = new THREE.Mesh(photoGeo, photoMat);
@@ -1293,7 +1295,7 @@
             scene.add(photoMesh);
 
             // Picture Light above the Portrait Photo
-            const photoLight = new THREE.PointLight(0xfff1cf, 2.0, 5);
+            const photoLight = new THREE.PointLight(0xfff1cf, 3.5, 5);
             photoLight.position.set(4.65, 3.25, -1.5);
             photoLight.castShadow = true;
             photoLight.shadow.bias = -0.001;
