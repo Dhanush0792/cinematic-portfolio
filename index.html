@@ -1006,7 +1006,12 @@
             mapCtx.fillRect(0, 0, 512, 512);
 
             const mapTex = new THREE.CanvasTexture(mapCanvas);
-            const mapMat = new THREE.MeshStandardMaterial({ map: mapTex, roughness: 0.9 });
+            const mapMat = new THREE.MeshStandardMaterial({ 
+                map: mapTex, 
+                roughness: 0.4,
+                emissive: 0x5a483a,
+                emissiveIntensity: 0.65
+            });
             const mapMesh = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 2.2), mapMat);
             mapMesh.position.set(-4.95, 2.0, -1.5);
             mapMesh.rotation.y = Math.PI / 2;
@@ -1027,7 +1032,7 @@
             scene.add(bottomRoller);
 
             // Constant Picture Light above the India Map
-            const mapLight = new THREE.PointLight(0xfff1cf, 1.4, 4);
+            const mapLight = new THREE.PointLight(0xfff1cf, 2.5, 5);
             mapLight.position.set(-4.65, 3.25, -1.5);
             mapLight.castShadow = true;
             mapLight.shadow.bias = -0.001;
@@ -1049,10 +1054,12 @@
 
             const mapImg = new Image();
             mapImg.onload = () => {
-                // Clear and draw map only
+                // Clear and draw map with increased contrast/brightness
                 mapCtx.fillStyle = '#efdfbc';
                 mapCtx.fillRect(0, 0, 512, 512);
+                mapCtx.filter = 'contrast(2.2) brightness(1.05)';
                 mapCtx.drawImage(mapImg, 0, 0, 512, 512);
+                mapCtx.filter = 'none';
 
                 mapTex.needsUpdate = true;
             };
