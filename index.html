@@ -1269,6 +1269,50 @@
             };
             mapImg.src = "indian map.webp";
 
+            // Portrait Photo Frame on the Right Wall (Opposite the Map)
+            const photoBaseMat = new THREE.MeshStandardMaterial({ color: 0x18120e, roughness: 0.75, metalness: 0.1 }); // Dark wooden frame
+            const photoFrameGeo = new THREE.BoxGeometry(0.04, 1.66, 0.96);
+            const photoFrame = new THREE.Mesh(photoFrameGeo, photoBaseMat);
+            photoFrame.position.set(4.93, 2.0, -1.5);
+            photoFrame.castShadow = true;
+            photoFrame.receiveShadow = true;
+            scene.add(photoFrame);
+
+            const photoTexLoader = new THREE.TextureLoader();
+            const photoTex = photoTexLoader.load('dhanush_photo.jpg');
+            const photoMat = new THREE.MeshStandardMaterial({ 
+                map: photoTex, 
+                roughness: 0.25,
+                metalness: 0.1
+            });
+            const photoGeo = new THREE.PlaneGeometry(0.92, 1.62);
+            const photoMesh = new THREE.Mesh(photoGeo, photoMat);
+            photoMesh.position.set(4.908, 2.0, -1.5);
+            photoMesh.rotation.y = -Math.PI / 2; // Face inward towards desk
+            photoMesh.castShadow = true;
+            scene.add(photoMesh);
+
+            // Picture Light above the Portrait Photo
+            const photoLight = new THREE.PointLight(0xfff1cf, 2.0, 5);
+            photoLight.position.set(4.65, 3.25, -1.5);
+            photoLight.castShadow = true;
+            photoLight.shadow.bias = -0.001;
+            scene.add(photoLight);
+
+            // Picture lamp arm fixture for Portrait
+            const photoFixtureArmGeo = new THREE.CylinderGeometry(0.008, 0.008, 0.25, 8);
+            photoFixtureArmGeo.rotateZ(Math.PI / 2);
+            const photoFixtureArm = new THREE.Mesh(photoFixtureArmGeo, new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.8, roughness: 0.2 }));
+            photoFixtureArm.position.set(4.82, 3.25, -1.5);
+            scene.add(photoFixtureArm);
+
+            // Picture lamp shade/hood fixture for Portrait
+            const photoFixtureShadeGeo = new THREE.CylinderGeometry(0.025, 0.025, 0.4, 12);
+            photoFixtureShadeGeo.rotateX(Math.PI / 2);
+            const photoFixtureShade = new THREE.Mesh(photoFixtureShadeGeo, new THREE.MeshStandardMaterial({ color: 0x1d1d1d, metalness: 0.7, roughness: 0.3 }));
+            photoFixtureShade.position.set(4.68, 3.25, -1.5);
+            scene.add(photoFixtureShade);
+
             // 2. Left Wall: Academic Frame & Polaroid
             const dipCanvas = document.createElement('canvas');
             dipCanvas.width = 256;
