@@ -894,10 +894,9 @@
             scene.add(standBase);
 
             // Sleek neck connected to the back of the monitor
-            const standNeckGeo = new THREE.BoxGeometry(0.12, 0.68, 0.04);
-            standNeckGeo.rotateX(0.15); // Tilts forward slightly to meet the back of the monitor casing
+            const standNeckGeo = new THREE.BoxGeometry(0.12, 0.45, 0.08);
             const standNeck = new THREE.Mesh(standNeckGeo, standBaseMat);
-            standNeck.position.set(0, 1.01, -0.61); // Center position connecting base at -0.65 to monitor back at -0.57
+            standNeck.position.set(0, 0.88, -0.65); // Placed directly under the monitor board
             standNeck.castShadow = true;
             scene.add(standNeck);
 
