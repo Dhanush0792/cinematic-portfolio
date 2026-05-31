@@ -739,7 +739,7 @@
         let lightSwitchMesh, corkboardMesh, monitorMesh;
         let interactiveObjects = [];
         let particlesSystem, steamSystem;
-        let threadLines = [];
+
         
         const raycaster = new THREE.Raycaster();
         const mouse = new THREE.Vector2();
@@ -1681,52 +1681,6 @@
                 corkboardMesh.add(pin);
             });
 
-            buildEvidenceThreads();
-        }
-
-        function buildEvidenceThreads() {
-            const nodes = {
-                profile: new THREE.Vector3(-1.7, 0.6, 0.06),
-                project1: new THREE.Vector3(-1.8, -0.5, 0.06),
-                saas: new THREE.Vector3(0.0, 0.7, 0.06),
-                skills: new THREE.Vector3(0.1, -0.4, 0.06),
-                experience: new THREE.Vector3(1.7, 0.6, 0.06),
-                education: new THREE.Vector3(1.8, -0.5, 0.06)
-            };
-
-            const connections = [
-                [nodes.profile, nodes.project1],
-                [nodes.profile, nodes.saas],
-                [nodes.saas, nodes.skills],
-                [nodes.saas, nodes.experience],
-                [nodes.skills, nodes.education],
-                [nodes.experience, nodes.education],
-                [nodes.project1, nodes.skills]
-            ];
-
-            const threadMat = new THREE.LineBasicMaterial({
-                color: 0x8a2525,
-                linewidth: 2
-            });
-
-            connections.forEach(conn => {
-                const points = [];
-                const mid = new THREE.Vector3().addVectors(conn[0], conn[1]).multiplyScalar(0.5);
-                mid.y -= 0.12;
-                mid.z += 0.02;
-                
-                points.push(conn[0]);
-                points.push(mid);
-                points.push(conn[1]);
-
-                const curve = new THREE.CatmullRomCurve3(points);
-                const curvePoints = curve.getPoints(20);
-                const geometry = new THREE.BufferGeometry().setFromPoints(curvePoints);
-                
-                const line = new THREE.Line(geometry, threadMat);
-                corkboardMesh.add(line);
-                threadLines.push(line);
-            });
         }
 
         // ==========================================
@@ -2142,13 +2096,11 @@
                 if (zoomProgress > 0.9) {
                     if (isLightOn) {
                         pointLight.color.setHex(0xffb000);
-                        threadLines.forEach(l => l.material.color.setHex(0x8a2525));
                     }
                     updateHUD(5, "CONVERGENCE", "Case complete. Contact details available in secure folder.");
                 } else {
                     if (isLightOn) {
                         pointLight.color.setHex(0xffb000);
-                        threadLines.forEach(l => l.material.color.setHex(0x8a2525));
                         updateHUD(4, "INVESTIGATION ACTIVE", "Zoomed into evidence board.");
                     }
                 }
