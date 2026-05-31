@@ -894,15 +894,15 @@
             scene.add(standBase);
 
             // Sleek neck connected to the back of the monitor
-            const standNeckGeo = new THREE.BoxGeometry(0.12, 0.45, 0.08);
+            const standNeckGeo = new THREE.BoxGeometry(0.12, 0.6, 0.08);
             const standNeck = new THREE.Mesh(standNeckGeo, standBaseMat);
-            standNeck.position.set(0, 0.88, -0.65); // Placed directly under the monitor board
+            standNeck.position.set(0, 0.95, -0.65); // Placed directly under the monitor board
             standNeck.castShadow = true;
             scene.add(standNeck);
 
             // Curved Mac-style Monitor Body (Bent Plane Geometry design)
             const monBody = new THREE.Group();
-            monBody.position.set(0, 1.35, -0.55); // positioned in front of stand neck
+            monBody.position.set(0, 1.45, -0.55); // raised slightly to make the stand visible below it
             scene.add(monBody);
 
             // Back casing (sleek silver aluminum, bent plane)
