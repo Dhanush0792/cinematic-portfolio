@@ -1687,12 +1687,12 @@
 
         function buildEvidenceThreads() {
             const nodes = {
-                profile: new THREE.Vector3(-1.7, 0.6, -4.84),
-                project1: new THREE.Vector3(-1.8, -0.5, -4.84),
-                saas: new THREE.Vector3(0.0, 0.7, -4.84),
-                skills: new THREE.Vector3(0.1, -0.4, -4.84),
-                experience: new THREE.Vector3(1.7, 0.6, -4.84),
-                education: new THREE.Vector3(1.8, -0.5, -4.84)
+                profile: new THREE.Vector3(-1.7, 0.6, 0.06),
+                project1: new THREE.Vector3(-1.8, -0.5, 0.06),
+                saas: new THREE.Vector3(0.0, 0.7, 0.06),
+                skills: new THREE.Vector3(0.1, -0.4, 0.06),
+                experience: new THREE.Vector3(1.7, 0.6, 0.06),
+                education: new THREE.Vector3(1.8, -0.5, 0.06)
             };
 
             const connections = [
@@ -1725,7 +1725,7 @@
                 const geometry = new THREE.BufferGeometry().setFromPoints(curvePoints);
                 
                 const line = new THREE.Line(geometry, threadMat);
-                scene.add(line);
+                corkboardMesh.add(line);
                 threadLines.push(line);
             });
         }
