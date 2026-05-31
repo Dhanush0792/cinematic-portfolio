@@ -915,34 +915,47 @@
             standNeck.castShadow = true;
             scene.add(standNeck);
 
-            // Curved Mac-style Monitor Body (Silver/Aluminum design)
-            const rCurvature = 5.0;
-            const monitorWidth = 1.7; // Ultra-wide curved aspect
-            const monitorHeight = 0.95;
-            const arcLength = monitorWidth / rCurvature;
-            const thetaStart = Math.PI * 1.5 - arcLength / 2;
-
+            // Curved Mac-style Monitor Body (Bent Plane Geometry design)
             const monBody = new THREE.Group();
-            monBody.position.set(0, 1.35, -0.75); // positioned slightly back and adjusted height to meet stand neck
+            monBody.position.set(0, 1.35, -0.75); // aligned with stand neck
             scene.add(monBody);
 
-            // Back casing (sleek silver aluminum)
-            const backGeo = new THREE.CylinderGeometry(rCurvature, rCurvature, monitorHeight, 32, 1, true, thetaStart, arcLength);
+            // Back casing (sleek silver aluminum, bent plane)
+            const backGeo = new THREE.PlaneGeometry(1.68, 0.98, 16, 1);
+            const posBack = backGeo.attributes.position;
+            for (let i = 0; i < posBack.count; i++) {
+                const x = posBack.getX(i);
+                const z = 0.08 * (x * x) - 0.02; // concave curvature
+                posBack.setZ(i, z);
+            }
+            backGeo.computeVertexNormals();
             const backMat = new THREE.MeshStandardMaterial({ color: 0xd0d0d0, metalness: 0.9, roughness: 0.15, side: THREE.DoubleSide });
             const backMesh = new THREE.Mesh(backGeo, backMat);
-            backMesh.position.set(0, 0, rCurvature - 0.02);
             backMesh.castShadow = true;
             monBody.add(backMesh);
 
-            // Black front bezel frame
-            const bezelGeo = new THREE.CylinderGeometry(rCurvature - 0.002, rCurvature - 0.002, monitorHeight + 0.02, 32, 1, true, thetaStart, arcLength);
+            // Black front bezel frame (slightly smaller, bent plane)
+            const bezelGeo = new THREE.PlaneGeometry(1.66, 0.96, 16, 1);
+            const posBezel = bezelGeo.attributes.position;
+            for (let i = 0; i < posBezel.count; i++) {
+                const x = posBezel.getX(i);
+                const z = 0.08 * (x * x) - 0.01;
+                posBezel.setZ(i, z);
+            }
+            bezelGeo.computeVertexNormals();
             const bezelMat = new THREE.MeshStandardMaterial({ color: 0x151515, roughness: 0.4, side: THREE.DoubleSide });
             const bezelMesh = new THREE.Mesh(bezelGeo, bezelMat);
-            bezelMesh.position.set(0, 0, rCurvature - 0.01);
             monBody.add(bezelMesh);
 
-            // Curved Emissive Screen Mesh
-            const screenGeo = new THREE.CylinderGeometry(rCurvature - 0.004, rCurvature - 0.004, monitorHeight - 0.04, 32, 1, true, thetaStart, arcLength);
+            // Curved Screen (bent plane)
+            const screenGeo = new THREE.PlaneGeometry(1.62, 0.92, 16, 1);
+            const posScreen = screenGeo.attributes.position;
+            for (let i = 0; i < posScreen.count; i++) {
+                const x = posScreen.getX(i);
+                const z = 0.08 * (x * x);
+                posScreen.setZ(i, z);
+            }
+            screenGeo.computeVertexNormals();
             
             const monitorCanvas = document.createElement('canvas');
             monitorCanvas.width = 512;
@@ -968,7 +981,7 @@
             });
             monitorMesh = new THREE.Mesh(screenGeo, screenMat);
             monitorMesh.name = "computer_monitor";
-            monitorMesh.position.set(0, 0, rCurvature);
+            monitorMesh.position.set(0, 0, 0.01); // offset slightly forward in local Z
             monBody.add(monitorMesh);
 
             monitorMesh.userData = { canvas: monitorCanvas, ctx: mCtx, texture: monitorTexture };
