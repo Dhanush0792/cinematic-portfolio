@@ -1735,8 +1735,58 @@
         // 5. INTERACTIVE TIMELINES & SCROLLYTELLING
         // ==========================================
         function triggerFlickerSequence() {
-            if (isLightOn) return;
+            if (isLightOn) {
+                // TURN LIGHTS OFF
+                isLightOn = false;
+                
+                // Play retro mechanical switch click
+                if (soundOn) {
+                    const switchClick = new Audio("https://assets.mixkit.co/active_storage/sfx/2568/2568-84.wav");
+                    switchClick.volume = 0.45;
+                    switchClick.play().catch(() => {});
+                }
+
+                // Snap switch lever back to 0.0
+                gsap.to(lightSwitchMesh.rotation, { z: 0.0, duration: 0.15 });
+
+                // Fade lights out
+                gsap.to(pointLight, { intensity: 0, duration: 0.3 });
+                gsap.to(ambientLight, { intensity: 0.015, duration: 0.5 });
+                
+                // Reset scene background color
+                scene.background.setHex(0x020202);
+
+                // Darken light bulb mesh
+                const bulb = scene.getObjectByName("bulb_geo");
+                if (bulb) bulb.material.color.setHex(0x222222);
+
+                // Fade out neon hum
+                const humAudio = document.getElementById('neon-hum-audio');
+                if (humAudio) {
+                    gsap.to(humAudio, { 
+                        volume: 0, 
+                        duration: 0.5, 
+                        onComplete: () => humAudio.pause() 
+                    });
+                }
+
+                // Disable flashlight cursor overlay
+                gsap.to("#flashlight-overlay", { opacity: 0.0, duration: 0.5 });
+
+                // Update HUD
+                updateHUD(3, "POWER FAILURE", "Click the physical switch to the left of the board to boot the lights.");
+                currentAct = 3;
+                return;
+            }
+
             isLightOn = true;
+
+            // Play retro mechanical switch click when turning on
+            if (soundOn) {
+                const switchClick = new Audio("https://assets.mixkit.co/active_storage/sfx/2568/2568-84.wav");
+                switchClick.volume = 0.45;
+                switchClick.play().catch(() => {});
+            }
 
             // Automatically turn on audio and start crickets + light flicker sounds
             soundOn = true;
