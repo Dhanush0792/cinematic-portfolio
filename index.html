@@ -914,15 +914,34 @@
             standNeck.castShadow = true;
             scene.add(standNeck);
 
-            const monBodyGeo = new THREE.BoxGeometry(1.4, 0.9, 0.3);
-            const monBodyMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.4 });
-            const monBody = new THREE.Mesh(monBodyGeo, monBodyMat);
-            monBody.position.set(0, 1.3, -0.7); // placed slightly back to meet neck connection
-            monBody.castShadow = true;
+            // Curved Mac-style Monitor Body (Silver/Aluminum design)
+            const rCurvature = 5.0;
+            const monitorWidth = 1.7; // Ultra-wide curved aspect
+            const monitorHeight = 0.95;
+            const arcLength = monitorWidth / rCurvature;
+            const thetaStart = Math.PI * 1.5 - arcLength / 2;
+
+            const monBody = new THREE.Group();
+            monBody.position.set(0, 1.35, -0.75); // positioned slightly back and adjusted height to meet stand neck
             scene.add(monBody);
 
-            // Emissive Screen Mesh parented to the monitor body
-            const screenGeo = new THREE.PlaneGeometry(1.3, 0.8);
+            // Back casing (sleek silver aluminum)
+            const backGeo = new THREE.CylinderGeometry(rCurvature, rCurvature, monitorHeight, 32, 1, true, thetaStart, arcLength);
+            const backMat = new THREE.MeshStandardMaterial({ color: 0xd0d0d0, metalness: 0.9, roughness: 0.15 });
+            const backMesh = new THREE.Mesh(backGeo, backMat);
+            backMesh.position.set(0, 0, rCurvature - 0.02);
+            backMesh.castShadow = true;
+            monBody.add(backMesh);
+
+            // Black front bezel frame
+            const bezelGeo = new THREE.CylinderGeometry(rCurvature - 0.002, rCurvature - 0.002, monitorHeight + 0.02, 32, 1, true, thetaStart, arcLength);
+            const bezelMat = new THREE.MeshStandardMaterial({ color: 0x151515, roughness: 0.4 });
+            const bezelMesh = new THREE.Mesh(bezelGeo, bezelMat);
+            bezelMesh.position.set(0, 0, rCurvature - 0.01);
+            monBody.add(bezelMesh);
+
+            // Curved Emissive Screen Mesh
+            const screenGeo = new THREE.CylinderGeometry(rCurvature - 0.004, rCurvature - 0.004, monitorHeight - 0.04, 32, 1, true, thetaStart, arcLength);
             
             const monitorCanvas = document.createElement('canvas');
             monitorCanvas.width = 512;
@@ -947,11 +966,78 @@
             });
             monitorMesh = new THREE.Mesh(screenGeo, screenMat);
             monitorMesh.name = "computer_monitor";
-            monitorMesh.position.set(0, 0.05, 0.16); // Local position offset
-            monBody.add(monitorMesh); // Parent it!
+            monitorMesh.position.set(0, 0, rCurvature);
+            monBody.add(monitorMesh);
 
             monitorMesh.userData = { canvas: monitorCanvas, ctx: mCtx, texture: monitorTexture };
             interactiveObjects.push(monitorMesh);
+
+            // ==========================================
+            // Sleek Apple Keyboard & Magic Mouse on the Desk
+            // ==========================================
+            const kbGroup = new THREE.Group();
+            kbGroup.position.set(0, 0.675, -0.22); // centered in front of computer base
+            kbGroup.rotation.x = 0.04; // subtle ergonomic tilt
+
+            // Keyboard Chassis
+            const kbBaseGeo = new THREE.BoxGeometry(0.7, 0.01, 0.24);
+            const kbBaseMat = new THREE.MeshStandardMaterial({ color: 0xe5e5e5, metalness: 0.85, roughness: 0.25 });
+            const kbBase = new THREE.Mesh(kbBaseGeo, kbBaseMat);
+            kbBase.position.y = 0.005;
+            kbBase.castShadow = true;
+            kbBase.receiveShadow = true;
+            kbGroup.add(kbBase);
+
+            // Chiclet Keys
+            const keyMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.35 });
+            const rows = 5;
+            const cols = 14;
+            const keyW = 0.04;
+            const keyH = 0.006;
+            const keyD = 0.03;
+            const gap = 0.008;
+
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    let kw = keyW;
+                    let xOffset = (c - (cols - 1)/2) * (keyW + gap);
+                    let zOffset = (r - (rows - 1)/2) * (keyD + gap);
+
+                    // Spacebar Custom Mesh
+                    if (r === 4 && c >= 4 && c <= 9) {
+                        if (c === 4) {
+                            kw = keyW * 6 + gap * 5;
+                            xOffset = 0;
+                            const keyGeo = new THREE.BoxGeometry(kw, keyH, keyD);
+                            const keyMesh = new THREE.Mesh(keyGeo, keyMat);
+                            keyMesh.position.set(xOffset, 0.01, zOffset);
+                            keyMesh.castShadow = true;
+                            kbGroup.add(keyMesh);
+                        }
+                        continue;
+                    }
+
+                    const keyGeo = new THREE.BoxGeometry(kw, keyH, keyD);
+                    const keyMesh = new THREE.Mesh(keyGeo, keyMat);
+                    keyMesh.position.set(xOffset, 0.01, zOffset);
+                    keyMesh.castShadow = true;
+                    kbGroup.add(keyMesh);
+                }
+            }
+            scene.add(kbGroup);
+
+            // Magic Mouse
+            const mouseGroup = new THREE.Group();
+            mouseGroup.position.set(0.48, 0.675, -0.22); // right side of the keyboard
+
+            const mouseGeo = new THREE.SphereGeometry(0.045, 16, 16);
+            mouseGeo.scale(0.8, 0.25, 1.4); // Flat, premium Apple profile
+            const mouseMat = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.1, roughness: 0.1 });
+            const mouseMesh = new THREE.Mesh(mouseGeo, mouseMat);
+            mouseMesh.position.y = 0.01;
+            mouseMesh.castShadow = true;
+            mouseGroup.add(mouseMesh);
+            scene.add(mouseGroup);
 
             // PHYSICAL LIGHT SWITCH (placed on the back wall next to the corkboard for visibility)
             const switchBoxGeo = new THREE.BoxGeometry(0.15, 0.22, 0.05);
