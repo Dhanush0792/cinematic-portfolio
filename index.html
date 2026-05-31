@@ -1045,7 +1045,7 @@
             // ==========================================
             const chairGroup = new THREE.Group();
             chairGroup.position.set(-0.2, 0, 0.6); // slightly offset to the left and placed in front of the desk
-            chairGroup.rotation.y = 0.35; // rotated slightly sideways (angled towards the desk/monitor)
+            chairGroup.rotation.y = Math.PI - 0.5; // facing the computer, turned slightly sideways
 
             const metalMat = new THREE.MeshStandardMaterial({ color: 0x777777, metalness: 0.85, roughness: 0.2 });
             const leatherMat = new THREE.MeshStandardMaterial({ color: 0x1a120b, roughness: 0.65 }); // dark brown premium leather
