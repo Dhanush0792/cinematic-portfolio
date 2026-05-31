@@ -927,7 +927,7 @@
 
             // Back casing (sleek silver aluminum)
             const backGeo = new THREE.CylinderGeometry(rCurvature, rCurvature, monitorHeight, 32, 1, true, thetaStart, arcLength);
-            const backMat = new THREE.MeshStandardMaterial({ color: 0xd0d0d0, metalness: 0.9, roughness: 0.15 });
+            const backMat = new THREE.MeshStandardMaterial({ color: 0xd0d0d0, metalness: 0.9, roughness: 0.15, side: THREE.DoubleSide });
             const backMesh = new THREE.Mesh(backGeo, backMat);
             backMesh.position.set(0, 0, rCurvature - 0.02);
             backMesh.castShadow = true;
@@ -935,7 +935,7 @@
 
             // Black front bezel frame
             const bezelGeo = new THREE.CylinderGeometry(rCurvature - 0.002, rCurvature - 0.002, monitorHeight + 0.02, 32, 1, true, thetaStart, arcLength);
-            const bezelMat = new THREE.MeshStandardMaterial({ color: 0x151515, roughness: 0.4 });
+            const bezelMat = new THREE.MeshStandardMaterial({ color: 0x151515, roughness: 0.4, side: THREE.DoubleSide });
             const bezelMesh = new THREE.Mesh(bezelGeo, bezelMat);
             bezelMesh.position.set(0, 0, rCurvature - 0.01);
             monBody.add(bezelMesh);
@@ -962,7 +962,8 @@
             const monitorTexture = new THREE.CanvasTexture(monitorCanvas);
             const screenMat = new THREE.MeshBasicMaterial({
                 map: monitorTexture,
-                color: 0xffffff
+                color: 0xffffff,
+                side: THREE.DoubleSide
             });
             monitorMesh = new THREE.Mesh(screenGeo, screenMat);
             monitorMesh.name = "computer_monitor";
