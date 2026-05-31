@@ -902,16 +902,16 @@
             const standBaseGeo = new THREE.BoxGeometry(0.5, 0.02, 0.4);
             const standBaseMat = new THREE.MeshStandardMaterial({ color: 0x555555, metalness: 0.8, roughness: 0.2 });
             const standBase = new THREE.Mesh(standBaseGeo, standBaseMat);
-            standBase.position.set(0, 0.675 + 0.01, -0.65);
+            standBase.position.set(0, 0.675 + 0.01, -0.9); // Moved back from -0.65 to -0.9
             standBase.castShadow = true;
             standBase.receiveShadow = true;
             scene.add(standBase);
 
             // Sleek neck connected to the back of the monitor
             const standNeckGeo = new THREE.BoxGeometry(0.12, 0.6, 0.04);
-            standNeckGeo.rotateX(-0.2); // angled back
+            standNeckGeo.rotateX(0.28); // Tilted forward to meet the back of the monitor
             const standNeck = new THREE.Mesh(standNeckGeo, standBaseMat);
-            standNeck.position.set(0, 0.95, -0.72);
+            standNeck.position.set(0, 0.95, -0.9); // Moved back from -0.72 to -0.9
             standNeck.castShadow = true;
             scene.add(standNeck);
 
